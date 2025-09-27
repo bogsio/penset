@@ -1,0 +1,74 @@
+{% extends 'layout.html' %}
+
+{% block main_content %}
+<div class="space-y-8">
+    <!-- Header Section -->
+    {% include 'reports/partials/scan_header.html' %}
+
+    <!-- Summary Stats -->
+    {% include 'reports/partials/scan_summary_stats.html' %}
+
+    <!-- Executive Summary Section -->
+    {% include 'reports/partials/scan_executive_summary.html' %}
+
+    <!-- Tabbed Content Section -->
+    <div class="card rounded-xl overflow-hidden" x-data="{ activeTab: '{{ active_tab }}' }">
+        <!-- Tab Navigation -->
+        <div class="px-6 py-4 border-b border-slate-700 bg-slate-800/30">
+            <nav class="flex space-x-8">
+                <button @click="activeTab = 'targets'; window.location.href = '?tab=targets'" 
+                        :class="activeTab === 'targets' ? 'text-blue-400 border-blue-400' : 'text-slate-400 border-transparent hover:text-slate-300'"
+                        class="py-2 px-1 border-b-2 font-medium text-sm transition-colors duration-200">
+                    <div class="flex items-center space-x-2">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
+                        </svg>
+                        <span>Targets</span>
+                        <span class="bg-slate-700 text-slate-300 px-2 py-1 rounded-full text-xs">{{ targets|length }}</span>
+                    </div>
+                </button>
+                <button @click="activeTab = 'services'; window.location.href = '?tab=services'" 
+                        :class="activeTab === 'services' ? 'text-blue-400 border-blue-400' : 'text-slate-400 border-transparent hover:text-slate-300'"
+                        class="py-2 px-1 border-b-2 font-medium text-sm transition-colors duration-200">
+                    <div class="flex items-center space-x-2">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"></path>
+                        </svg>
+                        <span>Services</span>
+                        <span class="bg-slate-700 text-slate-300 px-2 py-1 rounded-full text-xs">{{ services|length }}</span>
+                    </div>
+                </button>
+                <button @click="activeTab = 'results'; window.location.href = '?tab=results'" 
+                        :class="activeTab === 'results' ? 'text-blue-400 border-blue-400' : 'text-slate-400 border-transparent hover:text-slate-300'"
+                        class="py-2 px-1 border-b-2 font-medium text-sm transition-colors duration-200">
+                    <div class="flex items-center space-x-2">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+                        </svg>
+                        <span>Results</span>
+                        <span class="bg-slate-700 text-slate-300 px-2 py-1 rounded-full text-xs">{{ total_results }}</span>
+                    </div>
+                </button>
+            </nav>
+        </div>
+
+        <!-- Tab Content -->
+        <div class="p-0">
+            <!-- Targets Tab -->
+            <div x-show="activeTab === 'targets'" x-transition>
+                {% include 'reports/partials/scan_targets_section.html' %}
+            </div>
+
+            <!-- Services Tab -->
+            <div x-show="activeTab === 'services'" x-transition>
+                {% include 'reports/partials/scan_services_section.html' %}
+            </div>
+
+            <!-- Results Tab -->
+            <div x-show="activeTab === 'results'" x-transition>
+                {% include 'reports/partials/scan_results_section.html' %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

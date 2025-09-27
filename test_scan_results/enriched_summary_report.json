@@ -1,0 +1,75 @@
+{
+  "report_type": "ENRICHED RECONNAISSANCE & ENUMERATION SUMMARY REPORT",
+  "generated": "2025-09-09 12:31:27",
+  "input_targets": {
+    "count": 3,
+    "targets": [
+      "34.243.167.33",
+      "keepsimple.dev",
+      "www.keepsimple.dev"
+    ]
+  },
+  "enumeration_results": {
+    "targets_with_open_ports": 1,
+    "targets_with_services_detected": 1,
+    "web_services_enumerated": 6,
+    "targets_with_os_info": 0
+  },
+  "reconnaissance_results": {
+    "domains_discovered": 2,
+    "ip_addresses_discovered": 1,
+    "email_addresses_discovered": 0
+  },
+  "open_ports_breakdown": {
+    "34.243.167.33": 3
+  },
+  "services_breakdown": {
+    "34.243.167.33": 2
+  },
+  "web_services_breakdown": {
+    "http://keepsimple.dev": {
+      "directories_count": 0,
+      "technology": {
+        "server": "nginx/1.18.0 (Ubuntu)",
+        "status_code": 200,
+        "content_length": 58562
+      }
+    },
+    "https://keepsimple.dev": {
+      "directories_count": 3,
+      "technology": {
+        "server": "nginx/1.18.0 (Ubuntu)",
+        "status_code": 200,
+        "content_length": 58562
+      }
+    },
+    "http://www.keepsimple.dev": {
+      "directories_count": 0,
+      "technology": {
+        "server": "nginx/1.18.0 (Ubuntu)",
+        "status_code": 200,
+        "content_length": 58562
+      }
+    },
+    "https://www.keepsimple.dev": {
+      "directories_count": 3,
+      "technology": {
+        "server": "nginx/1.18.0 (Ubuntu)",
+        "status_code": 200,
+        "content_length": 58562
+      }
+    },
+    "http://34.243.167.33:80": {
+      "directories_count": 0,
+      "technology": {
+        "server": "nginx/1.18.0 (Ubuntu)",
+        "status_code": 200,
+        "content_length": 612
+      }
+    },
+    "https://34.243.167.33:443": {
+      "directories_count": 0,
+      "technology": {}
+    }
+  }
+}

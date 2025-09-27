@@ -1,0 +1,299 @@
+<!-- Target Detail Drawer Content -->
+<div class="h-full flex flex-col">
+    <!-- Header -->
+    <div class="px-6 py-4 border-b border-slate-700 bg-slate-800/50">
+        <div class="flex items-center justify-between">
+            <div>
+                <h2 class="text-xl font-semibold text-slate-100">Target Details</h2>
+                <p class="text-sm text-slate-400 mt-1">{{ target.get_target_type_display }}</p>
+            </div>
+            <button @click="drawerOpen = false" class="text-slate-400 hover:text-slate-200 transition-colors">
+                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- Content -->
+    <div class="flex-1 overflow-y-auto">
+        <div class="p-6 space-y-6">
+            <!-- Target Info -->
+            <div class="card p-6">
+                <h3 class="text-lg font-semibold text-slate-100 mb-4">Target Information</h3>
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-sm font-medium text-slate-400">Value</label>
+                        <p class="text-slate-100 font-mono text-sm bg-slate-800/50 p-2 rounded border border-slate-600">{{ target.value }}</p>
+                    </div>
+                    {% if target.description %}
+                    <div>
+                        <label class="text-sm font-medium text-slate-400">Description</label>
+                        <p class="text-slate-100">{{ target.description }}</p>
+                    </div>
+                    {% endif %}
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-sm font-medium text-slate-400">Type</label>
+                            <p class="text-slate-100">{{ target.get_target_type_display }}</p>
+                        </div>
+                        <div>
+                            <label class="text-sm font-medium text-slate-400">Status</label>
+                            <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full
+                                {% if target.status == 'active' %}bg-green-500/20 text-green-300 border border-green-500/30
+                                {% elif target.status == 'inactive' %}bg-red-500/20 text-red-300 border border-red-500/30
+                                {% else %}bg-slate-500/20 text-slate-300 border border-slate-500/30{% endif %}">
+                                {{ target.get_status_display|default:"Unknown" }}
+                            </span>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium text-slate-400">Discovered</label>
+                        <p class="text-slate-100">{{ target.created_at|date:"M j, Y H:i:s" }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Services -->
+            <div class="card p-6">
+                <h3 class="text-lg font-semibold text-slate-100 mb-4">Detected Services ({{ services|length }})</h3>
+                {% if services %}
+                    <div class="space-y-4">
+                        {% for service in services %}
+                        <div class="bg-slate-800/30 p-4 rounded-lg border border-slate-700">
+                            <div class="space-y-3">
+                                {% for port, service_info in service.data.services.items %}
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center space-x-3">
+                                            <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+                                                {{ port }}
+                                            </span>
+                                            <span class="text-sm font-medium text-slate-200">{{ service_info.service|title }}</span>
+                                            {% if service_info.version %}
+                                                <span class="text-xs text-slate-400">{{ service_info.version }}</span>
+                                            {% endif %}
+                                        </div>
+                                        <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full
+                                            {% if service_info.state == 'open' %}bg-green-500/20 text-green-300 border border-green-500/30
+                                            {% elif service_info.state == 'filtered' %}bg-yellow-500/20 text-yellow-300 border border-yellow-500/30
+                                            {% else %}bg-slate-500/20 text-slate-300 border border-slate-500/30{% endif %}">
+                                            {{ service_info.state }}
+                                        </span>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            <div class="mt-3 text-xs text-slate-500">
+                                Detected: {{ service.created_at|date:"M j, Y H:i" }}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-8">
+                        <div class="mx-auto h-12 w-12 bg-black border border-cyan-400 rounded-lg flex items-center justify-center mb-3 shadow-lg shadow-cyan-400/20">
+                            <svg class="h-6 w-6 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="filter: drop-shadow(0 0 3px #22d3ee);">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                        <p class="text-slate-400">No services detected for this target</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Results -->
+            <div class="card p-6" x-data="{ 
+                selectedType: 'all', 
+                selectedSeverity: 'all',
+                currentPage: 1,
+                itemsPerPage: 50,
+                get filteredResults() {
+                    return Array.from(document.querySelectorAll('.result-card')).filter(card => {
+                        const typeMatch = this.selectedType === 'all' || card.dataset.resultType === this.selectedType;
+                        const severityMatch = this.selectedSeverity === 'all' || card.dataset.severity === this.selectedSeverity;
+                        return typeMatch && severityMatch;
+                    });
+                },
+                get totalPages() {
+                    return Math.ceil(this.filteredResults.length / this.itemsPerPage);
+                },
+                get paginatedResults() {
+                    const start = (this.currentPage - 1) * this.itemsPerPage;
+                    const end = start + this.itemsPerPage;
+                    return this.filteredResults.slice(start, end);
+                },
+                goToPage(page) {
+                    this.currentPage = Math.max(1, Math.min(page, this.totalPages));
+                },
+                nextPage() {
+                    if (this.currentPage < this.totalPages) this.currentPage++;
+                },
+                prevPage() {
+                    if (this.currentPage > 1) this.currentPage--;
+                }
+            }">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-slate-100">
+                        Results (<span x-text="filteredResults.length"></span> of {{ all_results|length }})
+                        <span x-show="totalPages > 1" class="text-sm text-slate-400">(Page <span x-text="currentPage"></span> of <span x-text="totalPages"></span>)</span>
+                    </h3>
+                    <div class="flex items-center space-x-3">
+                        <div class="flex items-center space-x-1">
+                            <label class="text-xs text-slate-300">Type:</label>
+                            <select x-model="selectedType" class="px-2 py-1 bg-slate-800 border border-slate-600 rounded text-slate-200 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500">
+                                <option value="all">All</option>
+                                <option value="reconnaissance">Recon</option>
+                                <option value="service">Service</option>
+                                <option value="vulnerability">Vuln</option>
+                                <option value="exploitation">Exploit</option>
+                                <option value="post_exploitation">Post-Exploit</option>
+                                <option value="custom">Custom</option>
+                            </select>
+                        </div>
+                        <div class="flex items-center space-x-1">
+                            <label class="text-xs text-slate-300">Severity:</label>
+                            <select x-model="selectedSeverity" class="px-2 py-1 bg-slate-800 border border-slate-600 rounded text-slate-200 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500">
+                                <option value="all">All</option>
+                                <option value="critical">Critical</option>
+                                <option value="high">High</option>
+                                <option value="medium">Medium</option>
+                                <option value="low">Low</option>
+                                <option value="info">Info</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                {% if all_results %}
+                    <div class="space-y-3">
+                        {% for result in all_results %}
+                        <div class="p-4 bg-slate-800/30 rounded-lg border border-slate-700 cursor-pointer hover:bg-slate-800/50 transition-colors result-card" 
+                             data-result-type="{{ result.result_type }}"
+                             data-severity="{{ result.severity|default:"" }}"
+                             x-show="paginatedResults.includes($el)"
+                             x-transition
+                             @click="
+                                fetch('{% url 'reports:result_detail' result.scan_session.id result.id %}', {
+                                    headers: { 'X-Partial': 'true' }
+                                })
+                                .then(response => response.text())
+                                .then(html => {
+                                    modalContent = html;
+                                    modalOpen = true;
+                                })
+                                .catch(error => console.error('Error:', error));
+                             ">
+                            <div class="flex items-start justify-between">
+                                <div class="flex-1">
+                                    <div class="flex items-center space-x-2 mb-2">
+                                        <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full
+                                            {% if result.result_type == 'reconnaissance' %}bg-blue-500/20 text-blue-300 border border-blue-500/30
+                                            {% elif result.result_type == 'service' %}bg-cyan-500/20 text-cyan-300 border border-cyan-500/30
+                                            {% elif result.result_type == 'vulnerability' %}bg-red-500/20 text-red-300 border border-red-500/30
+                                            {% elif result.result_type == 'exploitation' %}bg-orange-500/20 text-orange-300 border border-orange-500/30
+                                            {% elif result.result_type == 'post_exploitation' %}bg-purple-500/20 text-purple-300 border border-purple-500/30
+                                            {% else %}bg-slate-500/20 text-slate-300 border border-slate-500/30{% endif %}">
+                                            {{ result.get_result_type_display }}
+                                        </span>
+                                        <span class="text-xs text-slate-400">{{ result.tool_name }}</span>
+                                        {% if result.severity %}
+                                            <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full
+                                                {% if result.severity == 'critical' %}bg-red-500/20 text-red-300 border border-red-500/30
+                                                {% elif result.severity == 'high' %}bg-orange-500/20 text-orange-300 border border-orange-500/30
+                                                {% elif result.severity == 'medium' %}bg-yellow-500/20 text-yellow-300 border border-yellow-500/30
+                                                {% elif result.severity == 'low' %}bg-blue-500/20 text-blue-300 border border-blue-500/30
+                                                {% else %}bg-slate-500/20 text-slate-300 border border-slate-500/30{% endif %}">
+                                                {{ result.get_severity_display|default:"Unknown" }}
+                                            </span>
+                                        {% endif %}
+                                    </div>
+                                    <h4 class="text-sm font-medium text-slate-100 mb-1">
+                                        {% if result.result_type == 'vulnerability' %}
+                                            {{ result.data.vulnerability|default:"Vulnerability" }}
+                                        {% elif result.result_type == 'exploitation' %}
+                                            {{ result.data.vulnerability|default:"Exploitation Attempt" }}
+                                        {% elif result.result_type == 'service' %}
+                                            Service Detection
+                                        {% elif result.result_type == 'reconnaissance' %}
+                                            {% if result.tool_name == 'gobuster' %}
+                                                Web Enumeration
+                                            {% elif result.tool_name == 'subfinder' %}
+                                                Subdomain Discovery
+                                            {% elif result.tool_name == 'nmap' %}
+                                                Network Scan
+                                            {% else %}
+                                                Reconnaissance
+                                            {% endif %}
+                                        {% else %}
+                                            {{ result.get_result_type_display }}
+                                        {% endif %}
+                                    </h4>
+                                    {% if result.data.description %}
+                                        <p class="text-sm text-slate-400">{{ result.data.description|truncatechars:150 }}</p>
+                                    {% elif result.result_type == 'service' and result.data.services %}
+                                        <p class="text-sm text-slate-400">
+                                            {% for port, service_info in result.data.services.items %}
+                                                {{ port }}: {{ service_info.service|title }}{% if not forloop.last %}, {% endif %}
+                                            {% endfor %}
+                                        </p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="mt-3 text-xs text-slate-500">
+                                Found: {{ result.created_at|date:"M j, Y H:i" }}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-8">
+                        <div class="mx-auto h-12 w-12 bg-black border border-cyan-400 rounded-lg flex items-center justify-center mb-3 shadow-lg shadow-cyan-400/20">
+                            <svg class="h-6 w-6 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="filter: drop-shadow(0 0 3px #22d3ee);">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                        <p class="text-slate-400">No results found for this target</p>
+                    </div>
+                {% endif %}
+                
+                <!-- Pagination Controls -->
+                <div class="mt-4 pt-4 border-t border-slate-700" x-show="totalPages > 1">
+                    <div class="flex items-center justify-center space-x-2">
+                        <button @click="prevPage()" 
+                                :disabled="currentPage === 1"
+                                :class="currentPage === 1 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-slate-700'"
+                                class="px-2 py-1 text-xs bg-slate-800 border border-slate-600 rounded text-slate-200 transition-colors">
+                            ← Prev
+                        </button>
+                        
+                        <template x-for="page in Array.from({length: Math.min(5, totalPages)}, (_, i) => {
+                            const start = Math.max(1, currentPage - 2);
+                            return start + i;
+                        }).filter(p => p <= totalPages)" :key="page">
+                            <button @click="goToPage(page)" 
+                                    :class="page === currentPage ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-200 hover:bg-slate-700'"
+                                    class="px-2 py-1 text-xs border border-slate-600 rounded transition-colors">
+                                <span x-text="page"></span>
+                            </button>
+                        </template>
+                        
+                        <button @click="nextPage()" 
+                                :disabled="currentPage === totalPages"
+                                :class="currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : 'hover:bg-slate-700'"
+                                class="px-2 py-1 text-xs bg-slate-800 border border-slate-600 rounded text-slate-200 transition-colors">
+                            Next →
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Metadata -->
+            {% if target.metadata %}
+            <div class="card p-6">
+                <h3 class="text-lg font-semibold text-slate-100 mb-4">Additional Data</h3>
+                <div class="bg-slate-800/50 p-4 rounded-lg border border-slate-700">
+                    <pre class="text-xs text-slate-300 font-mono overflow-x-auto">{{ target.metadata|pprint }}</pre>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>

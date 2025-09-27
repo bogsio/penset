@@ -1,0 +1,258 @@
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+{% if chart_data %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('attackSurfaceChart').getContext('2d');
+    
+    // Prepare data for Chart.js
+    const chartData = {{ chart_data|safe }};
+    
+    const labels = chartData.map(item => item.created_at);
+    const targetCounts = chartData.map(item => item.target_count);
+    
+    // Create a proper gradient after chart initialization
+    const createGradient = (ctx, chartArea) => {
+        const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
+        gradient.addColorStop(0, 'rgba(34, 211, 238, 0.2)');
+        gradient.addColorStop(1, 'rgba(34, 211, 238, 0.05)');
+        return gradient;
+    };
+    
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Targets',
+                data: targetCounts,
+                borderColor: '#22d3ee',
+                backgroundColor: function(context) {
+                    const chart = context.chart;
+                    const {ctx, chartArea} = chart;
+                    if (!chartArea) {
+                        return 'rgba(34, 211, 238, 0.1)';
+                    }
+                    return createGradient(ctx, chartArea);
+                },
+                borderWidth: 2,
+                fill: {
+                    target: 'origin',
+                    above: function(context) {
+                        const chart = context.chart;
+                        const {ctx, chartArea} = chart;
+                        if (!chartArea) {
+                            return 'rgba(34, 211, 238, 0.1)';
+                        }
+                        return createGradient(ctx, chartArea);
+                    }
+                },
+                tension: 0.4,
+                pointBackgroundColor: '#22d3ee',
+                pointBorderColor: '#0f172a',
+                pointBorderWidth: 2,
+                pointRadius: 6,
+                pointHoverRadius: 8,
+                pointHoverBackgroundColor: '#22d3ee',
+                pointHoverBorderColor: '#0f172a',
+                pointHoverBorderWidth: 3
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                    titleColor: '#e2e8f0',
+                    bodyColor: '#cbd5e1',
+                    borderColor: '#22d3ee',
+                    borderWidth: 1,
+                    cornerRadius: 8,
+                    displayColors: false,
+                    callbacks: {
+                        title: function(context) {
+                            const dataIndex = context[0].dataIndex;
+                            return chartData[dataIndex].description || 'Scan ' + (dataIndex + 1);
+                        },
+                        label: function(context) {
+                            return 'Targets: ' + context.parsed.y;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: {
+                        color: 'rgba(71, 85, 105, 0.3)',
+                        drawBorder: false
+                    },
+                    ticks: {
+                        color: '#94a3b8',
+                        font: {
+                            size: 12
+                        }
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(71, 85, 105, 0.3)',
+                        drawBorder: false
+                    },
+                    ticks: {
+                        color: '#94a3b8',
+                        font: {
+                            size: 12
+                        },
+                        stepSize: 1
+                    }
+                }
+            },
+            interaction: {
+                intersect: false,
+                mode: 'index'
+            },
+            elements: {
+                point: {
+                    hoverBackgroundColor: '#22d3ee'
+                }
+            }
+        }
+    });
+});
+</script>
+{% endif %}
+
+{% if vulnerability_chart_data %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('vulnerabilityChart').getContext('2d');
+    
+    // Prepare data for Chart.js
+    const chartData = {{ vulnerability_chart_data|safe }};
+    
+    const labels = chartData.map(item => item.created_at);
+    const vulnerabilityCounts = chartData.map(item => item.vulnerability_count);
+    
+    // Create a proper gradient after chart initialization
+    const createGradient = (ctx, chartArea) => {
+        const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
+        gradient.addColorStop(0, 'rgba(248, 113, 113, 0.2)');
+        gradient.addColorStop(1, 'rgba(248, 113, 113, 0.05)');
+        return gradient;
+    };
+    
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Vulnerabilities',
+                data: vulnerabilityCounts,
+                borderColor: '#f87171',
+                backgroundColor: function(context) {
+                    const chart = context.chart;
+                    const {ctx, chartArea} = chart;
+                    if (!chartArea) {
+                        return 'rgba(248, 113, 113, 0.1)';
+                    }
+                    return createGradient(ctx, chartArea);
+                },
+                borderWidth: 2,
+                fill: {
+                    target: 'origin',
+                    above: function(context) {
+                        const chart = context.chart;
+                        const {ctx, chartArea} = chart;
+                        if (!chartArea) {
+                            return 'rgba(248, 113, 113, 0.1)';
+                        }
+                        return createGradient(ctx, chartArea);
+                    }
+                },
+                tension: 0.4,
+                pointBackgroundColor: '#f87171',
+                pointBorderColor: '#0f172a',
+                pointBorderWidth: 2,
+                pointRadius: 6,
+                pointHoverRadius: 8,
+                pointHoverBackgroundColor: '#f87171',
+                pointHoverBorderColor: '#0f172a',
+                pointHoverBorderWidth: 3
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                    titleColor: '#e2e8f0',
+                    bodyColor: '#cbd5e1',
+                    borderColor: '#f87171',
+                    borderWidth: 1,
+                    cornerRadius: 8,
+                    displayColors: false,
+                    callbacks: {
+                        title: function(context) {
+                            const dataIndex = context[0].dataIndex;
+                            return chartData[dataIndex].description || 'Scan ' + (dataIndex + 1);
+                        },
+                        label: function(context) {
+                            return 'Vulnerabilities: ' + context.parsed.y;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: {
+                        color: 'rgba(71, 85, 105, 0.3)',
+                        drawBorder: false
+                    },
+                    ticks: {
+                        color: '#94a3b8',
+                        font: {
+                            size: 12
+                        }
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(71, 85, 105, 0.3)',
+                        drawBorder: false
+                    },
+                    ticks: {
+                        color: '#94a3b8',
+                        font: {
+                            size: 12
+                        },
+                        stepSize: 1
+                    }
+                }
+            },
+            interaction: {
+                intersect: false,
+                mode: 'index'
+            },
+            elements: {
+                point: {
+                    hoverBackgroundColor: '#f87171'
+                }
+            }
+        }
+    });
+});
+</script>
+{% endif %}

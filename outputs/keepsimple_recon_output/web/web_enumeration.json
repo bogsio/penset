@@ -1,0 +1,54 @@
+{
+  "http://keepsimple.dev": {
+    "directories": [],
+    "technology": {
+      "server": "nginx/1.18.0 (Ubuntu)",
+      "status_code": 200,
+      "content_length": 58562
+    }
+  },
+  "https://keepsimple.dev": {
+    "directories": [
+      "admin                (Status: 301) [Size: 0] [--> /admin/]",
+      "robots.txt           (Status: 200) [Size: 22]",
+      "sitemap.xml          (Status: 200) [Size: 2391]"
+    ],
+    "technology": {
+      "server": "nginx/1.18.0 (Ubuntu)",
+      "status_code": 200,
+      "content_length": 58562
+    }
+  },
+  "http://www.keepsimple.dev": {
+    "directories": [],
+    "technology": {
+      "server": "nginx/1.18.0 (Ubuntu)",
+      "status_code": 200,
+      "content_length": 58562
+    }
+  },
+  "https://www.keepsimple.dev": {
+    "directories": [
+      "admin                (Status: 301) [Size: 0] [--> /admin/]",
+      "robots.txt           (Status: 200) [Size: 22]",
+      "sitemap.xml          (Status: 200) [Size: 2391]"
+    ],
+    "technology": {
+      "server": "nginx/1.18.0 (Ubuntu)",
+      "status_code": 200,
+      "content_length": 58562
+    }
+  },
+  "http://34.243.167.33:80": {
+    "directories": [],
+    "technology": {
+      "server": "nginx/1.18.0 (Ubuntu)",
+      "status_code": 200,
+      "content_length": 612
+    }
+  },
+  "https://34.243.167.33:443": {
+    "directories": [],
+    "technology": {}
+  }
+}

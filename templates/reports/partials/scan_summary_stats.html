@@ -1,0 +1,52 @@
+<!-- Summary Stats -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="card p-6">
+        <div class="flex items-center">
+            <div class="flex-shrink-0">
+                <div class="h-10 w-10 bg-black border border-cyan-400 rounded-lg flex items-center justify-center shadow-lg shadow-cyan-400/20">
+                    <svg class="h-5 w-5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="filter: drop-shadow(0 0 3px #22d3ee);">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    </svg>
+                </div>
+            </div>
+            <div class="ml-4">
+                <p class="text-sm font-medium text-slate-400">Targets</p>
+                <p class="text-2xl font-bold text-cyan-400" style="text-shadow: 0 0 10px #22d3ee;">{{ targets|length }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="card p-6">
+        <div class="flex items-center">
+            <div class="flex-shrink-0">
+                <div class="h-10 w-10 bg-black border border-red-400 rounded-lg flex items-center justify-center shadow-lg shadow-red-400/20">
+                    <svg class="h-5 w-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="filter: drop-shadow(0 0 3px #f87171);">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                    </svg>
+                </div>
+            </div>
+            <div class="ml-4">
+                <p class="text-sm font-medium text-slate-400">Vulnerabilities</p>
+                <p class="text-2xl font-bold text-red-400" style="text-shadow: 0 0 10px #f87171;">{{ vulnerability_count }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="card p-6">
+        <div class="flex items-center">
+            <div class="flex-shrink-0">
+                <div class="h-10 w-10 bg-black border border-green-400 rounded-lg flex items-center justify-center shadow-lg shadow-green-400/20">
+                    <svg class="h-5 w-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="filter: drop-shadow(0 0 3px #4ade80);">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    </svg>
+                </div>
+            </div>
+            <div class="ml-4">
+                <p class="text-sm font-medium text-slate-400">Created</p>
+                <p class="text-lg font-bold text-green-400" style="text-shadow: 0 0 10px #4ade80;">{{ scan.created_at|date:"M j, Y" }}</p>
+                <p class="text-sm text-slate-400">{{ scan.created_at|time:"H:i" }}</p>
+            </div>
+        </div>
+    </div>
+</div>

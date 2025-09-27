@@ -1,0 +1,20 @@
+RECONNAISSANCE SUMMARY REPORT
+==================================================
+
+Generated: 2025-09-09 12:25:54
+
+INPUT TARGETS: 1
+  - keepsimple.dev
+
+DISCOVERED ASSETS:
+- All Domains: 2
+- IP Addresses: 1
+- Email Addresses: 0
+
+ALL DISCOVERED DOMAINS:
+  - keepsimple.dev
+  - www.keepsimple.dev
+
+IP ADDRESSES:
+  - 34.243.167.33
+

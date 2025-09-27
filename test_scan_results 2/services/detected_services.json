@@ -1,0 +1,14 @@
+{
+  "34.243.167.33": {
+    "22/tcp": {
+      "service": "ssh",
+      "version": "OpenSSH 8.9p1 Ubuntu 3ubuntu0.13 (Ubuntu Linux; protocol 2.0)",
+      "state": "open"
+    },
+    "80/tcp": {
+      "service": "http",
+      "version": "nginx 1.18.0 (Ubuntu)",
+      "state": "open"
+    }
+  }
+}

@@ -1,0 +1,24 @@
+# Nmap 7.97 scan initiated Tue Sep  9 12:30:28 2025 as: nmap -sV -sC -p 22,80,443 -oN keepsimple_recon_output/raw_output/nmap_service_34.243.167.33.txt 34.243.167.33
+Nmap scan report for ec2-34-243-167-33.eu-west-1.compute.amazonaws.com (34.243.167.33)
+Host is up (0.074s latency).
+
+PORT    STATE SERVICE  VERSION
+22/tcp  open  ssh      OpenSSH 8.9p1 Ubuntu 3ubuntu0.13 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   256 62:d9:b5:b3:14:06:f1:59:c3:b0:76:2f:08:90:a6:f4 (ECDSA)
+|_  256 c7:9d:4b:dc:1e:70:d0:ab:11:0d:80:7a:85:db:aa:c3 (ED25519)
+80/tcp  open  http     nginx 1.18.0 (Ubuntu)
+|_http-server-header: nginx/1.18.0 (Ubuntu)
+|_http-title: Welcome to nginx!
+443/tcp open  ssl/http nginx 1.18.0 (Ubuntu)
+|_http-title: Bad Request (400)
+| ssl-cert: Subject: commonName=bogs.io
+| Subject Alternative Name: DNS:bogs.io, DNS:www.bogs.io
+| Not valid before: 2025-07-27T22:25:30
+|_Not valid after:  2025-10-25T22:25:29
+|_http-server-header: nginx/1.18.0 (Ubuntu)
+|_ssl-date: TLS randomness does not represent time
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+# Nmap done at Tue Sep  9 12:30:49 2025 -- 1 IP address (1 host up) scanned in 21.18 seconds

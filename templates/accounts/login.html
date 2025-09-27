@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block title %}Login - Penset{% endblock %}
+
+{% block content %}
+<div class="min-h-screen gradient-bg flex items-center justify-center px-4 py-12">
+  <div class="w-full max-w-md card rounded-2xl shadow-2xl p-8 space-y-6">
+    <div class="space-y-2 text-center">
+      <h1 class="text-2xl font-bold tracking-tight text-slate-100">Welcome back</h1>
+      <p class="text-sm text-slate-300">Sign in with your credentials to continue.</p>
+    </div>
+
+    {% if form.errors %}
+      <div class="rounded-lg border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+        Invalid email or password. Please try again.
+      </div>
+    {% endif %}
+
+    <form method="post" class="space-y-5">
+      {% csrf_token %}
+      {% if next %}
+        <input type="hidden" name="next" value="{{ next }}">
+      {% endif %}
+
+      <div class="space-y-2">
+        <label for="id_username" class="text-sm font-semibold text-slate-200">Email address</label>
+        <input
+          type="email"
+          id="id_username"
+          name="username"
+          value="{{ form.username.value|default:'' }}"
+          autocomplete="email"
+          placeholder="you@example.com"
+          required
+          class="w-full rounded-lg border border-slate-600 bg-slate-800/50 px-3 py-2.5 text-sm text-slate-100 placeholder:text-slate-400 shadow-sm transition focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        >
+      </div>
+
+      <div class="space-y-2">
+        <label for="id_password" class="text-sm font-semibold text-slate-200">Password</label>
+        <input
+          type="password"
+          id="id_password"
+          name="password"
+          autocomplete="current-password"
+          placeholder="••••••••"
+          required
+          class="w-full rounded-lg border border-slate-600 bg-slate-800/50 px-3 py-2.5 text-sm text-slate-100 placeholder:text-slate-400 shadow-sm transition focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        >
+      </div>
+
+      <button
+        type="submit"
+        class="w-full btn btn-primary inline-flex items-center justify-center rounded-lg px-4 py-2.5 text-sm font-medium text-white"
+      >
+        Sign in
+      </button>
+    </form>
+
+    <p class="text-center text-sm text-slate-400">
+      Need access? Contact your Penset administrator.
+    </p>
+  </div>
+</div>
+{% endblock %}

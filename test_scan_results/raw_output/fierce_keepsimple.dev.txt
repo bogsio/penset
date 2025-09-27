@@ -1,0 +1,4 @@
+NS: ns10.domaincontrol.com. ns09.domaincontrol.com.
+SOA: ns09.domaincontrol.com. (97.74.104.5)
+Zone: failure
+Wildcard: failure

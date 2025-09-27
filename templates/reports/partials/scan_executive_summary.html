@@ -1,0 +1,193 @@
+<!-- Executive Summary Section -->
+<div class="card rounded-xl overflow-hidden">
+    <div class="px-6 py-4 border-b border-slate-700 bg-gradient-to-r from-slate-800/50 to-slate-700/30">
+        <div class="flex items-center space-x-3">
+            <div class="h-8 w-8 bg-black border border-yellow-400 rounded-lg flex items-center justify-center shadow-lg shadow-yellow-400/20">
+                <svg class="h-5 w-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="filter: drop-shadow(0 0 3px #facc15);">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+            </div>
+            <div>
+                <h2 class="text-xl font-semibold text-slate-100">Executive Summary</h2>
+                <p class="text-slate-400 text-sm">Business Impact Assessment</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="p-6">
+        {% if most_critical_finding %}
+            <!-- Risk Score -->
+            <div class="mb-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-slate-100">Overall Risk Score</h3>
+                    <div class="flex items-center space-x-2">
+                        <div class="h-3 w-24 bg-slate-700 rounded-full overflow-hidden">
+                            <div class="h-full bg-gradient-to-r 
+                                {% if risk_score >= 50 %}from-red-500 to-red-400
+                                {% elif risk_score >= 20 %}from-orange-500 to-orange-400
+                                {% elif risk_score >= 10 %}from-yellow-500 to-yellow-400
+                                {% else %}from-green-500 to-green-400{% endif %}" 
+                                style="width: {% if risk_score > 100 %}100{% else %}{{ risk_score }}{% endif %}%"></div>
+                        </div>
+                        <span class="text-lg font-bold 
+                            {% if risk_score >= 50 %}text-red-400
+                            {% elif risk_score >= 20 %}text-orange-400
+                            {% elif risk_score >= 10 %}text-yellow-400
+                            {% else %}text-green-400{% endif %}" 
+                            style="text-shadow: 0 0 10px {% if risk_score >= 50 %}#f87171{% elif risk_score >= 20 %}#fb923c{% elif risk_score >= 10 %}#facc15{% else %}#4ade80{% endif %};">
+                            {{ risk_score }}
+                        </span>
+                    </div>
+                </div>
+                <p class="text-slate-300 text-sm">
+                    Risk score calculated based on severity-weighted vulnerabilities: 
+                    Critical (10pts), High (7pts), Medium (4pts), Low (1pt)
+                </p>
+            </div>
+
+            <!-- Vulnerability Breakdown -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div class="text-center p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
+                    <div class="text-2xl font-bold text-red-400" style="text-shadow: 0 0 10px #f87171;">{{ total_critical }}</div>
+                    <div class="text-sm text-red-300">Critical</div>
+                </div>
+                <div class="text-center p-4 bg-orange-500/10 border border-orange-500/20 rounded-lg">
+                    <div class="text-2xl font-bold text-orange-400" style="text-shadow: 0 0 10px #fb923c;">{{ total_high }}</div>
+                    <div class="text-sm text-orange-300">High</div>
+                </div>
+                <div class="text-center p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+                    <div class="text-2xl font-bold text-yellow-400" style="text-shadow: 0 0 10px #facc15;">{{ total_medium }}</div>
+                    <div class="text-sm text-yellow-300">Medium</div>
+                </div>
+                <div class="text-center p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                    <div class="text-2xl font-bold text-blue-400" style="text-shadow: 0 0 10px #60a5fa;">{{ total_low }}</div>
+                    <div class="text-sm text-blue-300">Low</div>
+                </div>
+            </div>
+
+            <!-- Most Critical Finding -->
+            <div class="bg-slate-800/30 border border-slate-600 rounded-lg p-6">
+                <div class="flex items-start justify-between mb-4">
+                    <div>
+                        <h3 class="text-lg font-semibold text-slate-100 mb-2">Most Critical Finding</h3>
+                        <div class="flex items-center space-x-3">
+                            <span class="inline-flex px-3 py-1 text-sm font-medium rounded-full
+                                {% if most_critical_finding.severity == 'critical' %}bg-red-500/20 text-red-300 border border-red-500/30
+                                {% elif most_critical_finding.severity == 'high' %}bg-orange-500/20 text-orange-300 border border-orange-500/30
+                                {% elif most_critical_finding.severity == 'medium' %}bg-yellow-500/20 text-yellow-300 border border-yellow-500/30
+                                {% else %}bg-blue-500/20 text-blue-300 border border-blue-500/30{% endif %}">
+                                {{ most_critical_finding.get_severity_display|upper }}
+                            </span>
+                            <span class="text-slate-400 text-sm">{{ most_critical_finding.tool_name }}</span>
+                        </div>
+                    </div>
+                    <button @click="
+                        fetch('{% url 'reports:result_detail' scan.id most_critical_finding.id %}', {
+                            headers: { 'X-Partial': 'true' }
+                        })
+                        .then(response => response.text())
+                        .then(html => {
+                            modalContent = html;
+                            modalOpen = true;
+                        })
+                        .catch(error => console.error('Error:', error));
+                    " class="text-slate-400 hover:text-slate-200 transition-colors">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                        </svg>
+                    </button>
+                </div>
+                
+                <div class="space-y-3">
+                    <div>
+                        <h4 class="text-sm font-medium text-slate-300 mb-1">Vulnerability</h4>
+                        <p class="text-slate-100">
+                            {% if most_critical_finding.data.vulnerability %}
+                                {{ most_critical_finding.data.vulnerability }}
+                            {% else %}
+                                {{ most_critical_finding.tool_name|title }} Finding
+                            {% endif %}
+                        </p>
+                    </div>
+                    
+                    {% if most_critical_finding.target %}
+                    <div>
+                        <h4 class="text-sm font-medium text-slate-300 mb-1">Affected Target</h4>
+                        <p class="text-slate-100">{{ most_critical_finding.target.value }}</p>
+                    </div>
+                    {% endif %}
+                    
+                    {% if most_critical_finding.data.description %}
+                    <div>
+                        <h4 class="text-sm font-medium text-slate-300 mb-1">Description</h4>
+                        <p class="text-slate-200 text-sm">{{ most_critical_finding.data.description|truncatewords:30 }}</p>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="pt-3 border-t border-slate-600">
+                        <h4 class="text-sm font-medium text-slate-300 mb-2">Business Impact</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                            <div class="flex items-center space-x-2">
+                                <div class="h-2 w-2 bg-red-400 rounded-full"></div>
+                                <span class="text-slate-300">
+                                    {% if most_critical_finding.severity == 'critical' %}
+                                        Immediate action required
+                                    {% elif most_critical_finding.severity == 'high' %}
+                                        Address within 24-48 hours
+                                    {% elif most_critical_finding.severity == 'medium' %}
+                                        Address within 1-2 weeks
+                                    {% else %}
+                                        Monitor and address as needed
+                                    {% endif %}
+                                </span>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <div class="h-2 w-2 bg-orange-400 rounded-full"></div>
+                                <span class="text-slate-300">
+                                    {% if most_critical_finding.severity == 'critical' %}
+                                        High risk of data breach
+                                    {% elif most_critical_finding.severity == 'high' %}
+                                        Potential system compromise
+                                    {% elif most_critical_finding.severity == 'medium' %}
+                                        Moderate security risk
+                                    {% else %}
+                                        Low security risk
+                                    {% endif %}
+                                </span>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <div class="h-2 w-2 bg-yellow-400 rounded-full"></div>
+                                <span class="text-slate-300">
+                                    {% if most_critical_finding.severity == 'critical' %}
+                                        Regulatory compliance risk
+                                    {% elif most_critical_finding.severity == 'high' %}
+                                        Business continuity impact
+                                    {% elif most_critical_finding.severity == 'medium' %}
+                                        Operational efficiency impact
+                                    {% else %}
+                                        Minimal business impact
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <!-- No Vulnerabilities Found -->
+            <div class="text-center py-12">
+                <div class="h-16 w-16 bg-green-500/20 border border-green-500/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="h-8 w-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="filter: drop-shadow(0 0 3px #4ade80);">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-lg font-semibold text-slate-100 mb-2">No Critical Vulnerabilities Found</h3>
+                <p class="text-slate-400">This scan did not identify any security vulnerabilities requiring immediate attention.</p>
+                <div class="mt-4 inline-flex items-center px-4 py-2 bg-green-500/10 border border-green-500/20 rounded-lg">
+                    <span class="text-green-400 font-medium">Risk Score: 0</span>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>

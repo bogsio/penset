@@ -1,0 +1,17 @@
+{
+  "http://example.com": {
+    "status": 200,
+    "title": "Example Domain",
+    "technologies": ["nginx", "php"]
+  },
+  "https://example.com": {
+    "status": 200,
+    "title": "Example Domain",
+    "technologies": ["nginx", "php"]
+  },
+  "http://test.example.com": {
+    "status": 200,
+    "title": "Test Page",
+    "technologies": ["apache", "php"]
+  }
+}

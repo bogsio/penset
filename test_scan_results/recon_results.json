@@ -1,0 +1,63 @@
+{
+  "all_domains": [
+    "keepsimple.dev",
+    "www.keepsimple.dev"
+  ],
+  "ips": [
+    "34.243.167.33"
+  ],
+  "emails": [],
+  "dns_records": {
+    "www.keepsimple.dev": {
+      "A": [
+        "34.243.167.33"
+      ],
+      "AAAA": [],
+      "CNAME": [
+        "keepsimple.dev."
+      ],
+      "MX": [],
+      "NS": [
+        "ns09.domaincontrol.com.",
+        "ns10.domaincontrol.com."
+      ],
+      "TXT": [
+        "\"google-site-verification=5t9P6IZmeHK2NqrdfxiExUtW7BjjXQiDR04haEfcak0\""
+      ],
+      "SOA": [
+        "ns09.domaincontrol.com. dns.jomax.net. 2025052106 28800 7200 604800 600"
+      ]
+    },
+    "keepsimple.dev": {
+      "A": [
+        "34.243.167.33"
+      ],
+      "AAAA": [],
+      "CNAME": [],
+      "MX": [],
+      "NS": [
+        "ns09.domaincontrol.com.",
+        "ns10.domaincontrol.com."
+      ],
+      "TXT": [
+        "\"google-site-verification=5t9P6IZmeHK2NqrdfxiExUtW7BjjXQiDR04haEfcak0\""
+      ],
+      "SOA": [
+        "ns09.domaincontrol.com. dns.jomax.net. 2025052106 28800 7200 604800 600"
+      ]
+    }
+  },
+  "whois_data": {
+    "keepsimple.dev": {
+      "domain": "keepsimple.dev",
+      "registrar": null,
+      "creation_date": null,
+      "expiration_date": null,
+      "name_servers": [],
+      "emails": []
+    }
+  },
+  "input_targets": [
+    "keepsimple.dev"
+  ]
+}

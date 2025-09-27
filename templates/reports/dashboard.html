@@ -1,0 +1,14 @@
+{% extends 'layout.html' %}
+
+{% block main_content %}
+<div class="space-y-8">
+    <!-- Attack Surface History Chart -->
+    {% include 'reports/partials/attack_surface_chart.html' %}
+
+    <!-- Vulnerability History Chart -->
+    {% include 'reports/partials/vulnerability_chart.html' %}
+</div>
+
+<!-- Chart Scripts -->
+{% include 'reports/partials/chart_scripts.html' %}
+{% endblock %}

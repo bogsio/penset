@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Organization - Penset{% endblock %}
+
+{% block content %}
+<div class="min-h-screen gradient-bg flex items-center justify-center px-4 py-12">
+  <div class="w-full max-w-md card rounded-2xl shadow-2xl p-8 space-y-6">
+    <div class="space-y-2 text-center">
+      <h1 class="text-2xl font-bold tracking-tight text-slate-100">Create Organization</h1>
+      <p class="text-sm text-slate-300">Set up your organization to get started.</p>
+    </div>
+
+    {% if form.errors %}
+      <div class="rounded-lg border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+        Please correct the errors below.
+      </div>
+    {% endif %}
+
+    <form method="post" class="space-y-5">
+      {% csrf_token %}
+
+      <div class="space-y-2">
+        <label for="id_name" class="text-sm font-semibold text-slate-200">Organization Name</label>
+        <input
+          type="text"
+          id="id_name"
+          name="name"
+          value="{{ form.name.value|default:'' }}"
+          required
+          class="w-full rounded-lg border border-slate-600 bg-slate-800/50 px-3 py-2.5 text-sm text-slate-100 placeholder:text-slate-400 shadow-sm transition focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          placeholder="Organization name"
+        >
+        {% if form.name.errors %}
+          <div class="text-sm text-red-400">{{ form.name.errors.0 }}</div>
+        {% endif %}
+      </div>
+
+      <div class="space-y-2">
+        <label for="id_description" class="text-sm font-semibold text-slate-200">Description</label>
+        <textarea
+          id="id_description"
+          name="description"
+          rows="4"
+          class="w-full rounded-lg border border-slate-600 bg-slate-800/50 px-3 py-2.5 text-sm text-slate-100 placeholder:text-slate-400 shadow-sm transition focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          placeholder="Organization description"
+        >{{ form.description.value|default:'' }}</textarea>
+        {% if form.description.errors %}
+          <div class="text-sm text-red-400">{{ form.description.errors.0 }}</div>
+        {% endif %}
+      </div>
+
+      <div class="space-y-2">
+        <label for="id_website" class="text-sm font-semibold text-slate-200">Website</label>
+        <input
+          type="url"
+          id="id_website"
+          name="website"
+          value="{{ form.website.value|default:'' }}"
+          class="w-full rounded-lg border border-slate-600 bg-slate-800/50 px-3 py-2.5 text-sm text-slate-100 placeholder:text-slate-400 shadow-sm transition focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          placeholder="https://example.com"
+        >
+        {% if form.website.errors %}
+          <div class="text-sm text-red-400">{{ form.website.errors.0 }}</div>
+        {% endif %}
+      </div>
+
+      <div class="space-y-2">
+        <label for="id_contact_email" class="text-sm font-semibold text-slate-200">Contact Email</label>
+        <input
+          type="email"
+          id="id_contact_email"
+          name="contact_email"
+          value="{{ form.contact_email.value|default:'' }}"
+          class="w-full rounded-lg border border-slate-600 bg-slate-800/50 px-3 py-2.5 text-sm text-slate-100 placeholder:text-slate-400 shadow-sm transition focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          placeholder="contact@example.com"
+        >
+        {% if form.contact_email.errors %}
+          <div class="text-sm text-red-400">{{ form.contact_email.errors.0 }}</div>
+        {% endif %}
+      </div>
+
+      <button
+        type="submit"
+        class="w-full btn btn-primary inline-flex items-center justify-center rounded-lg px-4 py-2.5 text-sm font-medium text-white"
+      >
+        Create Organization
+      </button>
+    </form>
+
+    <p class="text-center text-sm text-slate-400">
+      <a href="{% url 'accounts:register' %}" class="text-blue-400 hover:text-blue-300 transition-colors">← Back to user details</a>
+    </p>
+  </div>
+</div>
+{% endblock %}

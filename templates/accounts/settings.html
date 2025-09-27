@@ -1,0 +1,283 @@
+{% extends 'layout.html' %}
+
+{% block main_content %}
+<div class="space-y-8">
+    <!-- Header Section -->
+    <div class="flex items-center justify-between">
+        <div>
+            <div class="flex items-center space-x-4 mb-2">
+                <h1 class="text-3xl font-bold text-slate-100">Organization Settings</h1>
+            </div>
+            <p class="text-slate-300">Manage your organization properties and configuration</p>
+        </div>
+    </div>
+
+    <!-- Messages -->
+    {% if messages %}
+        <div class="space-y-2">
+            {% for message in messages %}
+                <div class="p-4 rounded-lg border
+                    {% if message.tags == 'error' %}bg-red-500/10 border-red-500/30 text-red-300
+                    {% elif message.tags == 'success' %}bg-green-500/10 border-green-500/30 text-green-300
+                    {% elif message.tags == 'warning' %}bg-yellow-500/10 border-yellow-500/30 text-yellow-300
+                    {% else %}bg-blue-500/10 border-blue-500/30 text-blue-300{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- Organization Information Card -->
+    <div class="card rounded-xl overflow-hidden">
+        <div class="px-6 py-4 border-b border-slate-700 bg-gradient-to-r from-slate-800/50 to-slate-700/30">
+            <div class="flex items-center space-x-3">
+                <div class="h-8 w-8 bg-black border border-blue-400 rounded-lg flex items-center justify-center shadow-lg shadow-blue-400/20">
+                    <svg class="h-5 w-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="filter: drop-shadow(0 0 3px #60a5fa);">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h2 class="text-xl font-semibold text-slate-100">Organization Information</h2>
+                    <p class="text-slate-400 text-sm">Update your organization details</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="p-6">
+            <form method="post" class="space-y-6">
+                {% csrf_token %}
+                
+                <!-- Organization Name -->
+                <div>
+                    <label for="{{ form.name.id_for_label }}" class="block text-sm font-medium text-slate-300 mb-2">
+                        Organization Name *
+                    </label>
+                    {{ form.name }}
+                    {% if form.name.errors %}
+                        <div class="mt-1 text-sm text-red-400">
+                            {% for error in form.name.errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Description -->
+                <div>
+                    <label for="{{ form.description.id_for_label }}" class="block text-sm font-medium text-slate-300 mb-2">
+                        Description
+                    </label>
+                    {{ form.description }}
+                    {% if form.description.errors %}
+                        <div class="mt-1 text-sm text-red-400">
+                            {% for error in form.description.errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Website -->
+                <div>
+                    <label for="{{ form.website.id_for_label }}" class="block text-sm font-medium text-slate-300 mb-2">
+                        Website
+                    </label>
+                    {{ form.website }}
+                    {% if form.website.errors %}
+                        <div class="mt-1 text-sm text-red-400">
+                            {% for error in form.website.errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Contact Email -->
+                <div>
+                    <label for="{{ form.contact_email.id_for_label }}" class="block text-sm font-medium text-slate-300 mb-2">
+                        Contact Email
+                    </label>
+                    {{ form.contact_email }}
+                    {% if form.contact_email.errors %}
+                        <div class="mt-1 text-sm text-red-400">
+                            {% for error in form.contact_email.errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Targets -->
+                <div>
+                    <label for="{{ form.targets.id_for_label }}" class="block text-sm font-medium text-slate-300 mb-2">
+                        Targets
+                    </label>
+                    {{ form.targets }}
+                    <p class="mt-1 text-sm text-slate-400">Comma-separated list of target domains, IPs, or URLs</p>
+                    {% if form.targets.errors %}
+                        <div class="mt-1 text-sm text-red-400">
+                            {% for error in form.targets.errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Submit Button -->
+                <div class="pt-6 border-t border-slate-700">
+                    <div class="flex items-center justify-between">
+                        <div class="text-sm text-slate-400">
+                            Last updated: {{ organization.updated_at|date:"M j, Y H:i" }}
+                        </div>
+                        <button type="submit" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-slate-900">
+                            Save Changes
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Organization Statistics -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="card p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="h-10 w-10 bg-black border border-cyan-400 rounded-lg flex items-center justify-center shadow-lg shadow-cyan-400/20">
+                        <svg class="h-5 w-5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="filter: drop-shadow(0 0 3px #22d3ee);">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-slate-400">Total Users</p>
+                    <p class="text-2xl font-bold text-cyan-400" style="text-shadow: 0 0 10px #22d3ee;">{{ organization.users.count }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="h-10 w-10 bg-black border border-green-400 rounded-lg flex items-center justify-center shadow-lg shadow-green-400/20">
+                        <svg class="h-5 w-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="filter: drop-shadow(0 0 3px #4ade80);">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                        </svg>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-slate-400">Total Scans</p>
+                    <p class="text-2xl font-bold text-green-400" style="text-shadow: 0 0 10px #4ade80;">{{ organization.scan_sessions.count }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="h-10 w-10 bg-black border border-yellow-400 rounded-lg flex items-center justify-center shadow-lg shadow-yellow-400/20">
+                        <svg class="h-5 w-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="filter: drop-shadow(0 0 3px #facc15);">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        </svg>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-slate-400">Created</p>
+                    <p class="text-lg font-bold text-yellow-400" style="text-shadow: 0 0 10px #facc15;">{{ organization.created_at|date:"M j, Y" }}</p>
+                    <p class="text-sm text-slate-400">{{ organization.created_at|time:"H:i" }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Management Section -->
+    <div class="card rounded-xl overflow-hidden">
+        <div class="px-6 py-4 border-b border-slate-700">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h2 class="text-xl font-semibold text-slate-100">Organization Members</h2>
+                    <p class="text-slate-400 mt-1">{{ organization.users.count }} members</p>
+                </div>
+                <div class="text-sm text-slate-400">
+                    Your role: <span class="font-medium text-slate-300">{{ user.get_role_display }}</span>
+                </div>
+            </div>
+        </div>
+        
+        {% if organization.users.exists %}
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-slate-700">
+                    <thead class="bg-slate-800/50">
+                        <tr>
+                            <th scope="col" class="px-6 py-4 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">
+                                User
+                            </th>
+                            <th scope="col" class="px-6 py-4 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">
+                                Role
+                            </th>
+                            <th scope="col" class="px-6 py-4 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">
+                                Status
+                            </th>
+                            <th scope="col" class="px-6 py-4 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">
+                                Joined
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-700">
+                        {% for org_user in organization.users.all %}
+                        <tr class="{% if org_user == user %}bg-slate-800/30{% else %}hover:bg-slate-800/30{% endif %} transition-colors duration-200">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0 h-8 w-8">
+                                        <div class="h-8 w-8 bg-slate-600 rounded-full flex items-center justify-center">
+                                            <span class="text-sm font-medium text-slate-200">
+                                                {{ org_user.first_name|first|upper }}{{ org_user.last_name|first|upper }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="ml-4">
+                                        <div class="text-sm font-medium text-slate-100">
+                                            {{ org_user.full_name }}
+                                            {% if org_user == user %}<span class="text-slate-400">(You)</span>{% endif %}
+                                        </div>
+                                        <div class="text-sm text-slate-400">{{ org_user.email }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full
+                                    {% if org_user.role == 'admin' %}bg-red-500/20 text-red-300 border border-red-500/30
+                                    {% elif org_user.role == 'analyst' %}bg-blue-500/20 text-blue-300 border border-blue-500/30
+                                    {% else %}bg-slate-500/20 text-slate-300 border border-slate-500/30{% endif %}">
+                                    {{ org_user.get_role_display }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full
+                                    {% if org_user.is_active %}bg-green-500/20 text-green-300 border border-green-500/30
+                                    {% else %}bg-red-500/20 text-red-300 border border-red-500/30{% endif %}">
+                                    {% if org_user.is_active %}Active{% else %}Inactive{% endif %}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-300">
+                                {{ org_user.date_joined|date:"M j, Y" }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="p-12 text-center">
+                <div class="h-16 w-16 bg-slate-500/20 border border-slate-500/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="h-8 w-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-lg font-semibold text-slate-100 mb-2">No Members Found</h3>
+                <p class="text-slate-400">This organization doesn't have any members yet.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

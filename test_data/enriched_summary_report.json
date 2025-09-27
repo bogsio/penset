@@ -1,0 +1,17 @@
+{
+  "scan_info": {
+    "scan_type": "reconnaissance",
+    "start_time": "2025-09-24T14:00:00Z",
+    "end_time": "2025-09-24T14:30:00Z",
+    "duration": "30 minutes"
+  },
+  "input_targets": {
+    "targets": ["example.com", "test.example.com"]
+  },
+  "summary": {
+    "total_domains": 2,
+    "total_ips": 1,
+    "total_ports": 3,
+    "total_services": 2
+  }
+}

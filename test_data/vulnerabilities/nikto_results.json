@@ -1,0 +1,14 @@
+[
+  {
+    "host": "http://example.com",
+    "port": 80,
+    "vulnerabilities": [
+      {
+        "id": "1001",
+        "severity": "high",
+        "description": "Server allows directory browsing",
+        "url": "http://example.com/"
+      }
+    ]
+  }
+]
