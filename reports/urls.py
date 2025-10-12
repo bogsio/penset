@@ -22,5 +22,6 @@ urlpatterns = [
     path('scans/<uuid:scan_id>/', views.scan_detail, name='scan_detail'),
     path('scans/<uuid:scan_id>/targets/<uuid:target_id>/', views.target_detail, name='target_detail'),
     path('scans/<uuid:scan_id>/results/<uuid:result_id>/', views.result_detail, name='result_detail'),
+    path('scans/<uuid:scan_id>/results/<uuid:result_id>/attachments/<uuid:attachment_id>/download/', views.download_attachment, name='download_attachment'),
     path('debug/scans-data/', views.debug_scans_data, name='debug_scans_data'),
 ]

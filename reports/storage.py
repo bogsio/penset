@@ -169,3 +169,51 @@ class ScanStorageManager:
         except ClientError as e:
             logger.error(f"Error getting file size for {s3_key}: {e}")
             return 0
+    
+    def store_attachment(self, file_obj: BinaryIO, organization_id: str, attachment_uuid: str, 
+                        original_filename: str, content_type: Optional[str] = None) -> str:
+        """Store attachment file with organization-based path structure"""
+        # Extract file extension from original filename
+        file_extension = ""
+        if '.' in original_filename:
+            file_extension = f".{original_filename.split('.')[-1]}"
+        
+        # Create S3 key: {organization_id}/attachments/{attachment_uuid}.ext
+        s3_key = f"{organization_id}/attachments/{attachment_uuid}{file_extension}"
+        
+        if not content_type:
+            content_type, _ = mimetypes.guess_type(original_filename)
+            if not content_type:
+                content_type = 'application/octet-stream'
+        
+        try:
+            self.s3_client.upload_fileobj(
+                file_obj,
+                self.bucket_name,
+                s3_key,
+                ExtraArgs={
+                    'ServerSideEncryption': 'AES256',
+                    'ContentType': content_type,
+                    'Metadata': {
+                        'original_filename': original_filename,
+                        'organization_id': organization_id
+                    }
+                }
+            )
+            logger.info(f"Attachment stored at s3://{self.bucket_name}/{s3_key}")
+            return s3_key
+        except ClientError as e:
+            logger.error(f"Error storing attachment: {e}")
+            raise
+    
+    def get_attachment_stream(self, s3_key: str):
+        """Get attachment file stream from S3"""
+        try:
+            response = self.s3_client.get_object(
+                Bucket=self.bucket_name,
+                Key=s3_key
+            )
+            return response['Body']
+        except ClientError as e:
+            logger.error(f"Error retrieving attachment {s3_key}: {e}")
+            raise

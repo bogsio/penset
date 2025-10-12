@@ -49,10 +49,10 @@
                     <div class="flex items-center space-x-3">
                         <div class="flex items-center space-x-2">
                             <div class="h-8 w-8 bg-gradient-to-r from-slate-500 to-slate-600 rounded-full flex items-center justify-center">
-                                <span class="text-sm font-medium text-white">{{ user.first_name.0|default:user.username.0 }}{{ user.last_name.0|default:"" }}</span>
+                                <span class="text-sm font-medium text-white">{{ user.email.0|upper }}{{ user.email.1|default:"" }}</span>
                             </div>
                             <div class="hidden sm:block">
-                                <p class="text-sm font-medium text-slate-200">{{ user.get_full_name|default:user.username }}</p>
+                                <p class="text-sm font-medium text-slate-200">{{ user.get_full_name|default:user.email }}</p>
                                 <p class="text-xs text-slate-400 capitalize">{{ user.role|default:"Admin" }}</p>
                             </div>
                         </div>
@@ -99,15 +99,14 @@
     </div>
 
     <!-- Result Detail Modal -->
-    <div x-show="modalOpen" 
+    <div x-show="modalOpen"
          x-transition:enter="transition ease-out duration-300"
          x-transition:enter-start="opacity-0"
          x-transition:enter-end="opacity-100"
          x-transition:leave="transition ease-in duration-200"
          x-transition:leave-start="opacity-100"
          x-transition:leave-end="opacity-0"
-         class="fixed inset-0 z-50 flex items-center justify-center p-4"
-         style="display: none;">
+         class="fixed inset-0 z-50 flex items-center justify-center p-4">
         
         <!-- Backdrop -->
         <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="modalOpen = false"></div>

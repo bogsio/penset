@@ -1,0 +1,38 @@
+{% extends "account/base.html" %}
+{% load i18n %}
+
+{% block head_title %}{% trans "Email Confirmed" %}{% endblock head_title %}
+
+{% block account_content %}
+<div class="space-y-2 text-center">
+    <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-500/20 mb-4">
+        <svg class="h-6 w-6 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+        </svg>
+    </div>
+    <h1 class="text-2xl font-bold tracking-tight text-slate-100">{% trans "Email Confirmed!" %}</h1>
+    <p class="text-sm text-slate-300">
+        {% blocktrans with email=confirmation.email_address.email %}Your email address {{ email }} has been successfully confirmed.{% endblocktrans %}
+    </p>
+</div>
+
+<div class="space-y-4">
+    <div class="rounded-lg border border-green-400/30 bg-green-500/10 px-4 py-3 text-sm text-green-300">
+        {% trans "You can now access all features of your Penset account." %}
+    </div>
+    
+    <a
+        href="{% url 'reports:dashboard' %}"
+        class="w-full btn btn-primary inline-flex items-center justify-center rounded-lg px-4 py-2.5 text-sm font-medium text-white"
+    >
+        {% trans "Go to Dashboard" %}
+    </a>
+</div>
+
+<div class="text-center">
+    <p class="text-xs text-slate-400">
+        {% trans "Welcome to Penset Security Platform!" %}
+    </p>
+</div>
+{% endblock account_content %}
+

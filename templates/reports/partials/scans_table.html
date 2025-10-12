@@ -75,12 +75,12 @@
                             <div class="flex items-center">
                                 <div class="h-8 w-8 bg-gradient-to-r from-slate-500 to-slate-600 rounded-full flex items-center justify-center">
                                     <span class="text-xs font-medium text-white">
-                                        {{ scan.created_by.first_name.0|default:scan.created_by.username.0 }}{{ scan.created_by.last_name.0|default:"" }}
+                                        {{ scan.created_by.email.0|upper }}{{ scan.created_by.email.1|default:"" }}
                                     </span>
                                 </div>
                                 <div class="ml-3">
                                     <div class="text-sm font-medium text-slate-100">
-                                        {{ scan.created_by.get_full_name|default:scan.created_by.username }}
+                                        {{ scan.created_by.get_full_name|default:scan.created_by.email }}
                                     </div>
                                 </div>
                             </div>

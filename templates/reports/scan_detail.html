@@ -8,14 +8,22 @@
     <!-- Summary Stats -->
     {% include 'reports/partials/scan_summary_stats.html' %}
 
-    <!-- Executive Summary Section -->
-    {% include 'reports/partials/scan_executive_summary.html' %}
-
     <!-- Tabbed Content Section -->
     <div class="card rounded-xl overflow-hidden" x-data="{ activeTab: '{{ active_tab }}' }">
         <!-- Tab Navigation -->
         <div class="px-6 py-4 border-b border-slate-700 bg-slate-800/30">
             <nav class="flex space-x-8">
+                <button @click="activeTab = 'inference'; window.location.href = '?tab=inference'" 
+                        :class="activeTab === 'inference' ? 'text-blue-400 border-blue-400' : 'text-slate-400 border-transparent hover:text-slate-300'"
+                        class="py-2 px-1 border-b-2 font-medium text-sm transition-colors duration-200">
+                    <div class="flex items-center space-x-2">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                        </svg>
+                        <span>Inference</span>
+                        <span class="bg-slate-700 text-slate-300 px-2 py-1 rounded-full text-xs">{{ inference_results|length }}</span>
+                    </div>
+                </button>
                 <button @click="activeTab = 'targets'; window.location.href = '?tab=targets'" 
                         :class="activeTab === 'targets' ? 'text-blue-400 border-blue-400' : 'text-slate-400 border-transparent hover:text-slate-300'"
                         class="py-2 px-1 border-b-2 font-medium text-sm transition-colors duration-200">
@@ -54,6 +62,11 @@
 
         <!-- Tab Content -->
         <div class="p-0">
+            <!-- Inference Tab -->
+            <div x-show="activeTab === 'inference'" x-transition>
+                {% include 'reports/partials/scan_inference_section.html' %}
+            </div>
+
             <!-- Targets Tab -->
             <div x-show="activeTab === 'targets'" x-transition>
                 {% include 'reports/partials/scan_targets_section.html' %}

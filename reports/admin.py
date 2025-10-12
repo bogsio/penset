@@ -15,7 +15,7 @@ class ScanSessionAdmin(admin.ModelAdmin):
     list_filter = ('status', 'organization', 'created_at')
     search_fields = ('description',)
     readonly_fields = ('id', 'created_at', 'duration', 'target_count', 'result_count')
-    actions = ['import_scan_results_action', 'process_archives_now', 'reparse_scan_archives']
+    actions = ['import_scan_results_action', 'process_archives_now', 'reparse_scan_archives', 'clear_and_reprocess_archive']
     
     fieldsets = (
         (None, {
@@ -162,9 +162,7 @@ class ScanSessionAdmin(admin.ModelAdmin):
     
     def reparse_scan_archives(self, request, queryset):
         """Admin action: reparse archives for selected scan sessions."""
-        from django.core.management import call_command
-        from io import StringIO
-        import sys
+        from .importers import clear_and_reprocess_scan_archive
         
         processed = 0
         errors = 0
@@ -172,32 +170,10 @@ class ScanSessionAdmin(admin.ModelAdmin):
         
         for session in queryset:
             try:
-                # Check if scan has archive file
-                if not session.archive_file:
-                    errors += 1
-                    error_details.append(f"{session.id}: No archive file found")
-                    continue
+                # Use the reusable function
+                stats = clear_and_reprocess_scan_archive(session)
+                processed += 1
                 
-                # Check if archive file exists
-                if not session.archive_file.path or not os.path.exists(session.archive_file.path):
-                    errors += 1
-                    error_details.append(f"{session.id}: Archive file not found on disk")
-                    continue
-                
-                # Capture command output
-                old_stdout = sys.stdout
-                sys.stdout = captured_output = StringIO()
-                
-                try:
-                    # Call the reparse command
-                    call_command('reparse_scan', str(session.id), force=True)
-                    processed += 1
-                except Exception as e:
-                    errors += 1
-                    error_details.append(f"{session.id}: {str(e)}")
-                finally:
-                    sys.stdout = old_stdout
-                    
             except Exception as e:
                 errors += 1
                 error_details.append(f"{session.id}: {str(e)}")
@@ -229,6 +205,52 @@ class ScanSessionAdmin(admin.ModelAdmin):
             )
     
     reparse_scan_archives.short_description = "Reparse archives for selected sessions"
+    
+    def clear_and_reprocess_archive(self, request, queryset):
+        """Admin action: Clear all data and reprocess archive for selected scan sessions."""
+        from .importers import clear_and_reprocess_scan_archive
+        
+        processed = 0
+        errors = 0
+        error_details = []
+        
+        for session in queryset:
+            try:
+                # Use the reusable function
+                stats = clear_and_reprocess_scan_archive(session)
+                processed += 1
+                
+            except Exception as e:
+                errors += 1
+                error_details.append(f"{session.id}: {str(e)}")
+        
+        # Show results
+        if processed > 0:
+            self.message_user(
+                request, 
+                f"Successfully cleared and reprocessed {processed} scan session(s).", 
+                level=messages.SUCCESS
+            )
+        
+        if errors > 0:
+            error_message = f"Failed to clear and reprocess {errors} scan session(s):\n" + "\n".join(error_details[:5])
+            if len(error_details) > 5:
+                error_message += f"\n... and {len(error_details) - 5} more errors"
+            
+            self.message_user(
+                request, 
+                error_message, 
+                level=messages.ERROR
+            )
+        
+        if processed == 0 and errors == 0:
+            self.message_user(
+                request, 
+                "No valid scan sessions selected for clearing and reprocessing.", 
+                level=messages.WARNING
+            )
+    
+    clear_and_reprocess_archive.short_description = "Clear all data and reprocess archive"
     
 
 

@@ -141,6 +141,8 @@ class ScanImporter:
         self._process_web_enumeration(extract_path)
         self._process_vulnerabilities(extract_path)
         self._process_exploits(extract_path)
+        self._process_inference_results(extract_path)
+        self._process_exploit_scripts(extract_path)
         
         # Calculate statistics
         final_targets = self.scan_session.targets.count()
@@ -502,45 +504,224 @@ class ScanImporter:
                 with open(exploit_file, 'r') as f:
                     exploit_data = json.load(f)
                 
-                for exploit in exploit_data:
-                    # Extract target value
-                    target_value = exploit.get('host') or exploit.get('target', 'unknown')
-                    
-                    # Get or create target
-                    target, _ = Target.objects.get_or_create(
-                        scan_session=self.scan_session,
-                        value=target_value,
-                        defaults={
-                            'target_type': 'url' if target_value.startswith('http') else 'ip',
-                            'discovered_by': 'exploitation',
-                            'is_primary': False
-                        }
-                    )
-                    
-                    # Create exploitation result
-                    result = ScanResult.objects.create(
-                        scan_session=self.scan_session,
-                        result_type='exploitation',
-                        tool_name=exploit.get('tool', 'unknown'),
-                        data=exploit,
-                        target=target,
-                        severity=exploit.get('severity', 'high')
-                    )
-                    
-                    # Create artifact for exploit script if referenced
-                    if 'exploit_script_path' in exploit:
-                        script_name = exploit['exploit_script_path'].split('/')[-1]
-                        ScanArtifact.objects.create(
-                            scan_session=self.scan_session,
-                            result=result,
-                            artifact_type='exploit_script',
-                            name=script_name,
-                            s3_key=f"admin_upload/{self.scan_session.id}/exploits/{script_name}",
-                            file_size=0,  # We don't have the actual file size here
-                            mime_type='text/x-python',
-                            description=f"Exploit script for {exploit.get('vulnerability', 'unknown vulnerability')}"
-                        )
+                # Handle the nested structure of exploit_results.json
+                if isinstance(exploit_data, dict):
+                    # Process exploit_attempts, successful_exploits, failed_exploits
+                    for exploit_type in ['exploit_attempts', 'successful_exploits', 'failed_exploits']:
+                        if exploit_type in exploit_data:
+                            exploits_by_target = exploit_data[exploit_type]
+                            if isinstance(exploits_by_target, dict):
+                                for target_url, exploits in exploits_by_target.items():
+                                    if isinstance(exploits, list):
+                                        for exploit in exploits:
+                                            self._create_exploit_result(exploit, target_url)
+                elif isinstance(exploit_data, list):
+                    # Handle flat list structure
+                    for exploit in exploit_data:
+                        self._create_exploit_result(exploit)
                 break  # Only process the first file found
+    
+    def _create_exploit_result(self, exploit_data: dict, target_url: str = None):
+        """Create a single exploit result"""
+        # Extract target value
+        if target_url:
+            target_value = target_url
+        elif 'host' in exploit_data:
+            target_value = exploit_data['host']
+        elif 'target' in exploit_data:
+            target_value = exploit_data['target']
+        else:
+            target_value = 'unknown'
+        
+        # Get or create target
+        target, _ = Target.objects.get_or_create(
+            scan_session=self.scan_session,
+            value=target_value,
+            defaults={
+                'target_type': 'url' if target_value.startswith('http') else 'ip',
+                'discovered_by': 'exploitation',
+                'is_primary': False
+            }
+        )
+        
+        # Check if a similar exploit result already exists to prevent duplicates
+        vulnerability = exploit_data.get('vulnerability', 'unknown')
+        success = exploit_data.get('success', False)
+        
+        existing_result = ScanResult.objects.filter(
+            scan_session=self.scan_session,
+            result_type='exploitation',
+            target=target,
+            data__vulnerability=vulnerability,
+            data__success=success
+        ).first()
+        
+        if existing_result:
+            # Update the existing result with new data if needed
+            existing_result.data.update(exploit_data)
+            existing_result.save()
+            result = existing_result
+        else:
+            # Create exploitation result
+            result = ScanResult.objects.create(
+                scan_session=self.scan_session,
+                result_type='exploitation',
+                tool_name=exploit_data.get('tool', 'unknown'),
+                data=exploit_data,
+                target=target,
+                severity=exploit_data.get('severity', 'high')
+            )
+        
+        # Create artifact for exploit script if referenced AND successful
+        if 'exploit_script_path' in exploit_data and exploit_data.get('success', False):
+            script_name = exploit_data['exploit_script_path'].split('/')[-1]
+            s3_key = f"scans/{self.scan_session.id}/raw_outputs/exploits/{script_name}"
+            
+            # Check if an artifact for this script already exists
+            existing_artifact = ScanArtifact.objects.filter(
+                scan_session=self.scan_session,
+                artifact_type='exploit_script',
+                name=script_name
+            ).first()
+            
+            if not existing_artifact:
+                # Try to get file size from S3 if available
+                file_size = 0
+                try:
+                    from .storage import ScanStorageManager
+                    storage_manager = ScanStorageManager(self.scan_session)
+                    file_size = storage_manager.get_file_size(s3_key)
+                except Exception:
+                    # If we can't get the file size, leave it as 0
+                    pass
+                
+                ScanArtifact.objects.create(
+                    scan_session=self.scan_session,
+                    result=result,
+                    artifact_type='exploit_script',
+                    name=script_name,
+                    s3_key=s3_key,
+                    file_size=file_size,
+                    mime_type='text/x-python',
+                    description=f"Exploit script for {exploit_data.get('vulnerability', 'unknown vulnerability')}"
+                )
+        
+        return result
+    
+    def _process_inference_results(self, extract_path: str):
+        """Process AI/ML inference results from scan data"""
+        inference_file = os.path.join(extract_path, 'inference_results.json')
+        
+        if os.path.exists(inference_file):
+            with open(inference_file, 'r') as f:
+                data = json.load(f)
+            
+            # Create a single result for all inference data
+            ScanResult.objects.create(
+                scan_session=self.scan_session,
+                result_type='custom',  # Using custom type for inference results
+                tool_name='ai_inference_engine',
+                data=data,
+                severity=self._determine_inference_severity(data)
+            )
+    
+    def _process_exploit_scripts(self, extract_path: str):
+        """Process exploit scripts and attach them to exploitation results"""
+        exploits_dir = os.path.join(extract_path, 'exploits')
+        
+        if os.path.exists(exploits_dir):
+            # Get storage manager for S3 operations
+            from .storage import ScanStorageManager
+            from .models import ScanResultAttachment
+            storage_manager = ScanStorageManager(self.scan_session)
+            
+            for filename in os.listdir(exploits_dir):
+                if filename.endswith('.py'):
+                    script_path = os.path.join(exploits_dir, filename)
+                    file_size = os.path.getsize(script_path)
+                    
+                    if file_size > 0:  # Skip empty files
+                        # Find exploitation results that reference this specific script
+                        # Only create attachments for successful exploits
+                        exploitation_results = ScanResult.objects.filter(
+                            scan_session=self.scan_session,
+                            result_type='exploitation',
+                            data__success=True  # Only successful exploits
+                        )
+                        
+                        # Filter results that reference this specific script (in Python to avoid database backend issues)
+                        matching_results = []
+                        for result in exploitation_results:
+                            if (result.data and 
+                                result.data.get('exploit_script_path') and 
+                                filename in result.data['exploit_script_path']):
+                                matching_results.append(result)
+                        
+                        # Create attachments for each successful result that references this script
+                        for result in matching_results:
+                            # Check if attachment already exists for this script and result
+                            existing_attachment = ScanResultAttachment.objects.filter(
+                                scan_result=result,
+                                attachment_type='exploit_script',
+                                file_name=filename
+                            ).first()
+                            
+                            if not existing_attachment:
+                                # Create attachment record first
+                                attachment = ScanResultAttachment.objects.create(
+                                    scan_result=result,
+                                    attachment_type='exploit_script',
+                                    file_name=filename,
+                                    original_path=f'exploits/{filename}',
+                                    description=f'Exploit script for {result.data.get("vulnerability", "unknown vulnerability")}',
+                                    s3_key='',  # Will be updated after S3 upload
+                                    file_size=file_size,
+                                    mime_type='text/x-python',
+                                    checksum=''  # Could calculate this if needed
+                                )
+                                
+                                # Upload file to S3 with organization-based path
+                                try:
+                                    with open(script_path, 'rb') as file_obj:
+                                        s3_key = storage_manager.store_attachment(
+                                            file_obj=file_obj,
+                                            organization_id=str(self.scan_session.organization.id),
+                                            attachment_uuid=str(attachment.id),
+                                            original_filename=filename,
+                                            content_type='text/x-python'
+                                        )
+                                    
+                                    # Update attachment with S3 key
+                                    attachment.s3_key = s3_key
+                                    attachment.save()
+                                    
+                                    print(f"Uploaded exploit script to S3: {filename} ({file_size} bytes) -> {s3_key}")
+                                    
+                                except Exception as e:
+                                    print(f"Error uploading {filename} to S3: {e}")
+                                    # Delete the attachment record if S3 upload failed
+                                    attachment.delete()
+    
+    def _determine_inference_severity(self, data: dict) -> str:
+        """Determine severity based on inference confidence and risk assessment"""
+        # Look for confidence scores or risk indicators in the data
+        if isinstance(data, dict):
+            # Check for high confidence critical findings
+            if 'critical_findings' in data and data.get('critical_findings'):
+                return 'critical'
+            elif 'high_risk' in data and data.get('high_risk'):
+                return 'high'
+            elif 'confidence' in data:
+                confidence = data.get('confidence', 0)
+                if confidence > 0.8:
+                    return 'high'
+                elif confidence > 0.6:
+                    return 'medium'
+                else:
+                    return 'low'
+        
+        # Default to medium severity for inference results
+        return 'medium'
 
 
 def import_scan_from_zip_file(scan_session: ScanSession, zip_file_path: str) -> Dict[str, Any]:
@@ -571,3 +752,82 @@ def import_scan_from_uploaded_file(scan_session: ScanSession, uploaded_file) -> 
     """
     importer = ScanImporter(scan_session)
     return importer.import_from_uploaded_file(uploaded_file)
+
+
+def clear_and_reprocess_scan_archive(scan_session: ScanSession) -> Dict[str, Any]:
+    """
+    Clear all data associated with a scan session and reprocess the archive.
+    
+    This function:
+    1. Deletes all existing targets, results, and artifacts
+    2. Reprocesses the archive using the unified import system
+    3. Updates the scan session status
+    
+    Args:
+        scan_session: The ScanSession to clear and reprocess
+        
+    Returns:
+        Dict with processing statistics
+        
+    Raises:
+        ValueError: If scan session has no archive file or file is not accessible
+        Exception: If processing fails
+    """
+    import tempfile
+    import zipfile
+    from django.db import transaction
+    
+    # Validate scan session has archive file
+    if not scan_session.archive_file:
+        raise ValueError(f"Scan session {scan_session.id} has no archive file")
+    
+    # Check if archive file is accessible
+    try:
+        with scan_session.archive_file.open('rb') as f:
+            # File exists and is accessible
+            pass
+    except Exception as e:
+        raise ValueError(f"Archive file not accessible: {e}")
+    
+    with transaction.atomic():
+        # Clear existing data
+        targets_count = scan_session.targets.count()
+        results_count = scan_session.results.count()
+        artifacts_count = scan_session.artifacts.count()
+        
+        # Delete existing results, targets, and artifacts
+        scan_session.targets.all().delete()
+        scan_session.results.all().delete()
+        scan_session.artifacts.all().delete()
+        
+        # Update status
+        scan_session.status = 'processing'
+        scan_session.error_message = ''
+        scan_session.processing_log = f'Cleared {targets_count} targets, {results_count} results, {artifacts_count} artifacts. Reprocessing...'
+        scan_session.save()
+        
+        # Process the archive using the unified import system
+        try:
+            with tempfile.TemporaryDirectory() as temp_dir:
+                # Extract ZIP file
+                extract_path = os.path.join(temp_dir, 'extracted')
+                with scan_session.archive_file.open('rb') as archive_file:
+                    with zipfile.ZipFile(archive_file, 'r') as zip_ref:
+                        zip_ref.extractall(extract_path)
+                
+                # Use the unified import system
+                importer = ScanImporter(scan_session)
+                stats = importer._populate_models_from_files(extract_path)
+                
+                # Update status
+                scan_session.status = 'completed'
+                scan_session.processing_log = f"Reprocessing completed successfully: {stats}"
+                scan_session.save()
+                
+                return stats
+                
+        except Exception as e:
+            scan_session.status = 'failed'
+            scan_session.error_message = str(e)
+            scan_session.save()
+            raise e

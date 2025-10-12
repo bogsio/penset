@@ -1,0 +1,79 @@
+{% extends "account/base.html" %}
+{% load i18n %}
+
+{% block head_title %}{% trans "Complete Your Signup" %}{% endblock head_title %}
+
+{% block account_content %}
+<div class="space-y-2 text-center">
+  <h1 class="text-2xl font-bold tracking-tight text-slate-100">Complete Your Signup</h1>
+  <p class="text-sm text-slate-300">
+    {% blocktrans with provider_name=account.get_provider.name site_name=site.name %}
+    You're signing up with {{provider_name}}. Please complete your profile:
+    {% endblocktrans %}
+  </p>
+</div>
+
+    <form class="signup space-y-5" id="signup_form" method="post" action="/accounts/social/signup/">
+  {% csrf_token %}
+  
+  {% if form.non_field_errors %}
+    <div class="rounded-lg border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+      {{ form.non_field_errors.0 }}
+    </div>
+  {% endif %}
+
+  {% for field in form %}
+    <div class="space-y-2">
+      <label for="{{ field.id_for_label }}" class="text-sm font-semibold text-slate-200">
+        {{ field.label }}
+        {% if field.field.required %}<span class="text-red-400">*</span>{% endif %}
+      </label>
+      
+      {% if field.field.widget.input_type == 'email' %}
+        <input
+          type="email"
+          id="{{ field.id_for_label }}"
+          name="{{ field.name }}"
+          value="{{ field.value|default:'' }}"
+          placeholder="you@example.com"
+          {% if field.field.required %}required{% endif %}
+          class="w-full rounded-lg border border-slate-600 bg-slate-800/50 px-3 py-2.5 text-sm text-slate-100 placeholder:text-slate-400 shadow-sm transition focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        >
+      {% elif field.field.widget.input_type == 'text' %}
+        <input
+          type="text"
+          id="{{ field.id_for_label }}"
+          name="{{ field.name }}"
+          value="{{ field.value|default:'' }}"
+          placeholder="{{ field.label }}"
+          {% if field.field.required %}required{% endif %}
+          class="w-full rounded-lg border border-slate-600 bg-slate-800/50 px-3 py-2.5 text-sm text-slate-100 placeholder:text-slate-400 shadow-sm transition focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        >
+      {% else %}
+        {{ field }}
+      {% endif %}
+      
+      {% if field.errors %}
+        <div class="text-sm text-red-300">{{ field.errors.0 }}</div>
+      {% endif %}
+    </div>
+  {% endfor %}
+
+  {% if redirect_field_value %}
+    <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
+  {% endif %}
+
+  <button
+    type="submit"
+    class="w-full btn btn-primary inline-flex items-center justify-center rounded-lg px-4 py-2.5 text-sm font-medium text-white"
+  >
+    {% trans "Complete Signup" %} &raquo;
+  </button>
+</form>
+
+<div class="text-center">
+  <p class="text-xs text-slate-400">
+    By signing up, you agree to our terms of service and privacy policy.
+  </p>
+</div>
+{% endblock account_content %}

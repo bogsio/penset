@@ -12,20 +12,6 @@
         </div>
     </div>
 
-    <!-- Messages -->
-    {% if messages %}
-        <div class="space-y-2">
-            {% for message in messages %}
-                <div class="p-4 rounded-lg border
-                    {% if message.tags == 'error' %}bg-red-500/10 border-red-500/30 text-red-300
-                    {% elif message.tags == 'success' %}bg-green-500/10 border-green-500/30 text-green-300
-                    {% elif message.tags == 'warning' %}bg-yellow-500/10 border-yellow-500/30 text-yellow-300
-                    {% else %}bg-blue-500/10 border-blue-500/30 text-blue-300{% endif %}">
-                    {{ message }}
-                </div>
-            {% endfor %}
-        </div>
-    {% endif %}
 
     <!-- Organization Information Card -->
     <div class="card rounded-xl overflow-hidden">

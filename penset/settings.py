@@ -31,6 +31,7 @@ DJANGO_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sites',
 ]
 
 THIRD_PARTY_APPS = [
@@ -43,9 +44,8 @@ THIRD_PARTY_APPS = [
     'allauth.account',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.github',
-    'allauth.socialaccount.providers.linkedin_oauth2',
-    'allauth.socialaccount.providers.microsoft',
     'allauth.socialaccount.providers.google',
+    'naomi',
 ]
 
 LOCAL_APPS = [
@@ -118,6 +118,9 @@ DATABASES = {
 
 # Custom User Model
 AUTH_USER_MODEL = 'accounts.User'
+
+# Sites framework
+SITE_ID = 1
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
@@ -215,10 +218,16 @@ AWS_S3_OBJECT_PARAMETERS = {
     'CacheControl': 'max-age=86400',
 }
 
-# SES Settings
-EMAIL_BACKEND = 'django_ses.SESBackend'
-AWS_SES_REGION_NAME = env('AWS_SES_REGION_NAME', default='us-east-1')
-AWS_SES_REGION_ENDPOINT = f'email.{AWS_SES_REGION_NAME}.amazonaws.com'
+# Email Settings
+if DEBUG:
+    # Use django-naomi for development (opens emails in browser)
+    EMAIL_BACKEND = 'naomi.mail.backends.naomi.NaomiBackend'
+    EMAIL_FILE_PATH = BASE_DIR / 'emails'  # Directory to store emails
+else:
+    # Use SES for production
+    EMAIL_BACKEND = 'django_ses.SESBackend'
+    AWS_SES_REGION_NAME = env('AWS_SES_REGION_NAME', default='us-east-1')
+    AWS_SES_REGION_ENDPOINT = f'email.{AWS_SES_REGION_NAME}.amazonaws.com'
 
 # Login/Logout URLs
 LOGIN_URL = '/accounts/login/'
@@ -230,19 +239,30 @@ AUTHENTICATION_BACKENDS = [
     'allauth.account.auth_backends.AuthenticationBackend',
 ]
 
+# Custom adapters
+ACCOUNT_ADAPTER = 'accounts.adapters.CustomAccountAdapter'
+SOCIALACCOUNT_ADAPTER = 'accounts.adapters.CustomSocialAccountAdapter'
+
 # Allauth settings
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_USERNAME_REQUIRED = False
 ACCOUNT_AUTHENTICATION_METHOD = 'email'
-ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
+ACCOUNT_EMAIL_VERIFICATION = 'mandatory'  # Require email verification
 ACCOUNT_UNIQUE_EMAIL = True
 ACCOUNT_USER_MODEL_USERNAME_FIELD = None
 ACCOUNT_USER_MODEL_EMAIL_FIELD = 'email'
+ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION = True  # Auto-login after email confirmation
+ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 7  # Email confirmation expires in 7 days
+ACCOUNT_EMAIL_CONFIRMATION_COOLDOWN = 60  # 60 seconds between confirmation emails
+
+# Force HTML email templates
+ACCOUNT_EMAIL_SUBJECT_PREFIX = '[Penset] '
+ACCOUNT_DEFAULT_HTTP_PROTOCOL = 'http' if DEBUG else 'https'
 
 # Social account settings
 SOCIALACCOUNT_EMAIL_REQUIRED = True
-SOCIALACCOUNT_EMAIL_VERIFICATION = 'mandatory'
-SOCIALACCOUNT_AUTO_SIGNUP = False  # We'll handle this with custom adapter
+SOCIALACCOUNT_EMAIL_VERIFICATION = 'mandatory'  # Require email verification
+SOCIALACCOUNT_AUTO_SIGNUP = True  # Automatically complete signup with OAuth data
 
 # Provider-specific settings
 SOCIALACCOUNT_PROVIDERS = {
@@ -261,38 +281,13 @@ SOCIALACCOUNT_PROVIDERS = {
             'user:email',
         ],
     },
-    'linkedin_oauth2': {
-        'SCOPE': [
-            'r_liteprofile',
-            'r_emailaddress',
-        ],
-        'PROFILE_FIELDS': [
-            'id',
-            'first-name',
-            'last-name',
-            'email-address',
-            'picture-url',
-            'public-profile-url',
-        ],
-    },
-    'microsoft': {
-        'SCOPE': [
-            'openid',
-            'email',
-            'profile',
-        ],
-    },
 }
 
 # OAuth Provider Credentials (set these in your .env file)
-# GITHUB_CLIENT_ID = env('GITHUB_CLIENT_ID', default='')
-# GITHUB_CLIENT_SECRET = env('GITHUB_CLIENT_SECRET', default='')
-# LINKEDIN_CLIENT_ID = env('LINKEDIN_CLIENT_ID', default='')
-# LINKEDIN_CLIENT_SECRET = env('LINKEDIN_CLIENT_SECRET', default='')
-# MICROSOFT_CLIENT_ID = env('MICROSOFT_CLIENT_ID', default='')
-# MICROSOFT_CLIENT_SECRET = env('MICROSOFT_CLIENT_SECRET', default='')
-# GOOGLE_CLIENT_ID = env('GOOGLE_CLIENT_ID', default='')
-# GOOGLE_CLIENT_SECRET = env('GOOGLE_CLIENT_SECRET', default='')
+GITHUB_CLIENT_ID = env('GITHUB_CLIENT_ID', default='')
+GITHUB_CLIENT_SECRET = env('GITHUB_CLIENT_SECRET', default='')
+GOOGLE_CLIENT_ID = env('GOOGLE_CLIENT_ID', default='')
+GOOGLE_CLIENT_SECRET = env('GOOGLE_CLIENT_SECRET', default='')
 
 # Celery Configuration
 CELERY_BROKER_URL = env('REDIS_URL', default='redis://localhost:6379/0')
@@ -326,3 +321,6 @@ else:
             "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
         },
     }
+
+GITHUB_CLIENT_ID = env('GITHUB_CLIENT_ID', default='')
+GITHUB_CLIENT_SECRET = env('GITHUB_CLIENT_SECRET', default='')

@@ -308,3 +308,9 @@ Thumbs.db
 
 # uv
 .uv/
+
+# Email files (django-naomi)
+emails/
+
+# Selenium drivers
+drivers/

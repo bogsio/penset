@@ -1,0 +1,87 @@
+{% extends "account/base.html" %}
+{% load i18n %}
+
+{% block head_title %}{% trans "Sign In" %}{% endblock head_title %}
+
+{% block account_content %}
+<div class="space-y-2 text-center">
+  <h1 class="text-2xl font-bold tracking-tight text-slate-100">{% trans "Sign In" %}</h1>
+  <p class="text-sm text-slate-300">{% trans "Sign in to your account" %}</p>
+</div>
+
+<form class="login space-y-5" method="POST" action="{% url 'account_login' %}">
+  {% csrf_token %}
+  
+  {% if form.non_field_errors %}
+    <div class="rounded-lg border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+      {{ form.non_field_errors.0 }}
+    </div>
+  {% endif %}
+
+  <div class="space-y-2">
+    <label for="{{ form.login.id_for_label }}" class="text-sm font-semibold text-slate-200">{% trans "Email" %}</label>
+    <input
+      type="email"
+      id="{{ form.login.id_for_label }}"
+      name="{{ form.login.name }}"
+      value="{{ form.login.value|default:'' }}"
+      placeholder="you@example.com"
+      required
+      class="w-full rounded-lg border border-slate-600 bg-slate-800/50 px-3 py-2.5 text-sm text-slate-100 placeholder:text-slate-400 shadow-sm transition focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+    >
+    {% if form.login.errors %}
+      <div class="text-sm text-red-300">{{ form.login.errors.0 }}</div>
+    {% endif %}
+  </div>
+
+  <div class="space-y-2">
+    <label for="{{ form.password.id_for_label }}" class="text-sm font-semibold text-slate-200">{% trans "Password" %}</label>
+    <input
+      type="password"
+      id="{{ form.password.id_for_label }}"
+      name="{{ form.password.name }}"
+      placeholder="••••••••"
+      required
+      class="w-full rounded-lg border border-slate-600 bg-slate-800/50 px-3 py-2.5 text-sm text-slate-100 placeholder:text-slate-400 shadow-sm transition focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+    >
+    {% if form.password.errors %}
+      <div class="text-sm text-red-300">{{ form.password.errors.0 }}</div>
+    {% endif %}
+  </div>
+
+  {% if form.remember %}
+    <div class="flex items-center">
+      <input
+        type="checkbox"
+        id="{{ form.remember.id_for_label }}"
+        name="{{ form.remember.name }}"
+        class="rounded border-slate-600 bg-slate-800 text-blue-600 focus:ring-blue-500"
+      >
+      <label for="{{ form.remember.id_for_label }}" class="ml-2 text-sm text-slate-300">
+        {% trans "Remember me" %}
+      </label>
+    </div>
+  {% endif %}
+
+  {% if redirect_field_value %}
+    <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
+  {% endif %}
+
+  <button
+    type="submit"
+    class="w-full btn btn-primary inline-flex items-center justify-center rounded-lg px-4 py-2.5 text-sm font-medium text-white"
+  >
+    {% trans "Sign In" %}
+  </button>
+</form>
+
+<div class="text-center space-y-2">
+  <p class="text-xs text-slate-400">
+    <a href="{% url 'account_reset_password' %}" class="text-blue-400 hover:text-blue-300">{% trans "Forgot your password?" %}</a>
+  </p>
+  <p class="text-xs text-slate-400">
+    <a href="{% url 'accounts:login' %}" class="text-blue-400 hover:text-blue-300">{% trans "Back to main login" %}</a>
+  </p>
+</div>
+{% endblock account_content %}
+

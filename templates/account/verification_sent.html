@@ -1,0 +1,99 @@
+{% extends "account/base.html" %}
+{% load i18n %}
+
+{% block head_title %}{% trans "Verify Your Email" %}{% endblock head_title %}
+
+{% block account_content %}
+<div class="space-y-2 text-center">
+    <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-blue-500/20 mb-4">
+        <svg class="h-6 w-6 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+        </svg>
+    </div>
+    <h1 class="text-2xl font-bold tracking-tight text-slate-100">{% trans "Check Your Email" %}</h1>
+    <p class="text-sm text-slate-300">
+        {% blocktrans with email=email %}We've sent a confirmation email to {{ email }}. Please check your inbox and click the confirmation link to activate your account.{% endblocktrans %}
+    </p>
+</div>
+
+<div class="space-y-4">
+    <div class="rounded-lg border border-blue-400/30 bg-blue-500/10 px-4 py-3 text-sm text-blue-300">
+        <strong>{% trans "Didn't receive the email?" %}</strong><br>
+        {% trans "Check your spam folder or request a new confirmation email below." %}
+    </div>
+    
+    <form method="post" action="{% url 'accounts:resend_verification' %}" class="space-y-3" id="resend-form">
+        {% csrf_token %}
+        <input type="hidden" name="email" value="{{ email }}">
+        <button
+            type="submit"
+            class="w-full btn btn-secondary inline-flex items-center justify-center rounded-lg px-4 py-2.5 text-sm font-medium text-slate-200 border border-slate-600 hover:bg-slate-700"
+            id="resend-button"
+        >
+            {% trans "Resend Confirmation Email" %}
+        </button>
+    </form>
+
+    <script>
+        document.getElementById('resend-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const form = this;
+            const button = document.getElementById('resend-button');
+            const originalText = button.textContent;
+            
+            // Disable button and show loading
+            button.disabled = true;
+            button.textContent = 'Sending...';
+            
+            // Submit form via AJAX
+            fetch(form.action, {
+                method: 'POST',
+                body: new FormData(form),
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                }
+            })
+            .then(response => {
+                if (response.headers.get('content-type')?.includes('application/json')) {
+                    return response.json();
+                } else {
+                    // If not JSON, it's a redirect, reload the page
+                    window.location.reload();
+                    return;
+                }
+            })
+            .then(data => {
+                if (data && data.success) {
+                    // Show success message
+                    if (data.email_file) {
+                        // Open email in new tab
+                        window.open(data.email_file, '_blank');
+                    }
+                    // The global messages will handle showing the success message
+                    window.location.reload();
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                // Re-enable button
+                button.disabled = false;
+                button.textContent = originalText;
+            });
+        });
+    </script>
+    
+    <a
+        href="{% url 'accounts:login' %}"
+        class="w-full btn btn-primary inline-flex items-center justify-center rounded-lg px-4 py-2.5 text-sm font-medium text-white"
+    >
+        {% trans "Back to Login" %}
+    </a>
+</div>
+
+<div class="text-center">
+    <p class="text-xs text-slate-400">
+        {% trans "The confirmation link will expire in 7 days." %}
+    </p>
+</div>
+{% endblock account_content %}

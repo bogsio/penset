@@ -8,7 +8,6 @@ class Organization(models.Model):
     """
     name = models.CharField(
         max_length=100,
-        unique=True,
         validators=[
             RegexValidator(
                 regex=r'^[a-zA-Z0-9\s\-_]+$',

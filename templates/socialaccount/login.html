@@ -1,0 +1,40 @@
+{% extends "account/base.html" %}
+{% load i18n %}
+
+{% block head_title %}{% trans "Social Login" %}{% endblock head_title %}
+
+{% block account_content %}
+<div class="space-y-2 text-center">
+  {% if process == "connect" %}
+    <h1 class="text-2xl font-bold tracking-tight text-slate-100">
+      {% blocktrans with provider.name as provider %}Connect {{ provider }}{% endblocktrans %}
+    </h1>
+    <p class="text-sm text-slate-300">
+      {% blocktrans with provider.name as provider %}You are about to connect a new third party account from {{ provider }}.{% endblocktrans %}
+    </p>
+  {% else %}
+    <h1 class="text-2xl font-bold tracking-tight text-slate-100">
+      {% blocktrans with provider.name as provider %}Sign In Via {{ provider }}{% endblocktrans %}
+    </h1>
+    <p class="text-sm text-slate-300">
+      {% blocktrans with provider.name as provider %}You are about to sign in using a third party account from {{ provider }}.{% endblocktrans %}
+    </p>
+  {% endif %}
+</div>
+
+<form method="post" class="space-y-5">
+  {% csrf_token %}
+  <button
+    type="submit"
+    class="w-full btn btn-primary inline-flex items-center justify-center rounded-lg px-4 py-2.5 text-sm font-medium text-white"
+  >
+    {% trans "Continue" %}
+  </button>
+</form>
+
+<div class="text-center">
+  <p class="text-xs text-slate-400">
+    <a href="{% url 'accounts:login' %}" class="text-blue-400 hover:text-blue-300">{% trans "Back to login" %}</a>
+  </p>
+</div>
+{% endblock account_content %}

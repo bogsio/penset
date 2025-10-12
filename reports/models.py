@@ -191,7 +191,7 @@ class ScanResult(models.Model):
     raw_output_s3_key = models.CharField(max_length=500, blank=True)
     
     class Meta:
-        ordering = ['-created_at']
+        ordering = ['-created_at']  # Default ordering by creation time
         indexes = [
             models.Index(fields=['scan_session', 'result_type']),
             models.Index(fields=['scan_session', 'tool_name']),
@@ -202,6 +202,18 @@ class ScanResult(models.Model):
 
     def __str__(self):
         return f"{self.tool_name} - {self.result_type} ({self.severity})"
+    
+    @classmethod
+    def get_severity_priority(cls, severity):
+        """Get numeric priority for severity ordering (lower number = higher priority)"""
+        severity_priorities = {
+            'critical': 1,
+            'high': 2,
+            'medium': 3,
+            'low': 4,
+            'info': 5,
+        }
+        return severity_priorities.get(severity, 6)  # Unknown severity gets lowest priority
 
 
 class ScanArtifact(models.Model):
@@ -239,3 +251,59 @@ class ScanArtifact(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.artifact_type})"
+
+
+class ScanResultAttachment(models.Model):
+    """Represents file attachments for specific scan results"""
+    
+    ATTACHMENT_TYPES = [
+        ('exploit_script', 'Exploit Script'),
+        ('extracted_data', 'Extracted Data'),
+        ('screenshot', 'Screenshot'),
+        ('log_file', 'Log File'),
+        ('raw_output', 'Raw Output'),
+        ('config_file', 'Configuration File'),
+        ('payload', 'Payload'),
+        ('evidence', 'Evidence'),
+        ('other', 'Other'),
+    ]
+    
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    scan_result = models.ForeignKey(ScanResult, on_delete=models.CASCADE, related_name='attachments')
+    attachment_type = models.CharField(max_length=50, choices=ATTACHMENT_TYPES)
+    file_name = models.CharField(max_length=255)
+    original_path = models.CharField(max_length=500, blank=True)  # Original path in archive
+    description = models.TextField(blank=True)
+    s3_key = models.CharField(max_length=500)
+    file_size = models.BigIntegerField()
+    mime_type = models.CharField(max_length=100, default='application/octet-stream')
+    checksum = models.CharField(max_length=64, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['scan_result', 'attachment_type']),
+            models.Index(fields=['attachment_type']),
+        ]
+        db_table = 'scan_result_attachments'
+    
+    def __str__(self):
+        return f"{self.file_name} ({self.attachment_type})"
+    
+    @property
+    def file_extension(self):
+        """Get file extension for icon display"""
+        return self.file_name.split('.')[-1].lower() if '.' in self.file_name else ''
+    
+    @property
+    def display_size(self):
+        """Format file size for display"""
+        if self.file_size < 1024:
+            return f"{self.file_size} B"
+        elif self.file_size < 1024 * 1024:
+            return f"{self.file_size / 1024:.1f} KB"
+        elif self.file_size < 1024 * 1024 * 1024:
+            return f"{self.file_size / (1024 * 1024):.1f} MB"
+        else:
+            return f"{self.file_size / (1024 * 1024 * 1024):.1f} GB"

@@ -32,3 +32,8 @@ django-allauth==0.57.0
 # pytest-django==4.7.0
 # black==23.11.0
 # flake8==6.1.0
+
+# Selenium Testing
+selenium==4.15.2
+pytest-selenium==4.1.0
+webdriver-manager==4.0.1

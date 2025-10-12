@@ -1,0 +1,81 @@
+{% extends "account/email/base_message.html" %}
+{% load account %}
+{% load i18n %}
+
+{% block content %}{% user_display user as user_display %}
+<style>
+    .title {
+        font-size: 28px;
+        font-weight: 600;
+        color: #f1f5f9;
+        margin-bottom: 8px;
+        letter-spacing: -0.025em;
+        text-align: center;
+    }
+    .subtitle {
+        font-size: 16px;
+        color: #94a3b8;
+        margin-bottom: 24px;
+        text-align: center;
+    }
+    .button {
+        display: inline-block;
+        background: linear-gradient(135deg, #3b82f6, #6366f1);
+        color: white;
+        text-decoration: none;
+        padding: 16px 32px;
+        border-radius: 12px;
+        font-weight: 600;
+        text-align: center;
+        margin: 24px 0;
+        transition: all 0.2s ease;
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        border: 1px solid rgba(59, 130, 246, 0.3);
+    }
+    .button:hover {
+        background: linear-gradient(135deg, #2563eb, #4f46e5);
+        transform: translateY(-1px);
+        box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+    }
+    .warning {
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        border-radius: 12px;
+        padding: 20px;
+        margin: 24px 0;
+        color: #fca5a5;
+    }
+    .link-box {
+        word-break: break-all;
+        background: rgba(15, 23, 42, 0.8);
+        padding: 16px;
+        border-radius: 8px;
+        font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+        font-size: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: #cbd5e1;
+    }
+    .highlight {
+        color: #3b82f6;
+        font-weight: 500;
+    }
+</style>
+
+<h1 class="title">{% trans "Confirm Your Email Address" %}</h1>
+<p class="subtitle">{% trans "Complete your account setup" %}</p>
+
+<p class="text">{% blocktrans with site_name=current_site.name site_domain=current_site.domain %}You're receiving this email because you signed up for a <span class="highlight">Penset</span> account. To complete your registration and start using our automated pentesting platform, please confirm your email address by clicking the button below:{% endblocktrans %}</p>
+
+<div style="text-align: center;">
+    <a href="{{ activate_url }}" class="button">{% trans "Confirm Email Address" %}</a>
+</div>
+
+<div class="warning">
+    <strong>{% trans "Important:" %}</strong> {% trans "This confirmation link will expire in 7 days. If you don't confirm your email within this time, you'll need to register again." %}
+</div>
+
+<p class="text">{% trans "If the button doesn't work, you can also copy and paste this link into your browser:" %}</p>
+<div class="link-box">{{ activate_url }}</div>
+
+<p class="text">{% trans "If you didn't create an account with Penset, you can safely ignore this email." %}</p>
+{% endblock content %}

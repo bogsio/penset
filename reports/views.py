@@ -1,5 +1,8 @@
 import hashlib
 import logging
+import tempfile
+import zipfile
+import os
 from rest_framework import generics, permissions, status, viewsets
 from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.response import Response
@@ -11,8 +14,9 @@ from django.contrib.auth.decorators import login_required
 from django.conf import settings
 from django.db.models import Count, Q
 from django.core.serializers.json import DjangoJSONEncoder
+from django.http import HttpResponse, Http404
 import json
-from .models import ScanSession, Target, ScanResult, ScanArtifact
+from .models import ScanSession, Target, ScanResult, ScanArtifact, ScanResultAttachment
 from .serializers import (
     ScanSessionSerializer, ScanSessionListSerializer, ScanUploadSerializer,
     TargetSerializer, ScanResultSerializer, ScanArtifactSerializer
@@ -158,6 +162,17 @@ class TargetViewSet(viewsets.ReadOnlyModelViewSet):
         """Get all results for this target"""
         target = self.get_object()
         results = target.results.all()
+        
+        # Apply severity-based ordering
+        severity_order = ['critical', 'high', 'medium', 'low', 'info']
+        from django.db.models import Case, When, IntegerField
+        severity_priority = Case(
+            *[When(severity=sev, then=idx) for idx, sev in enumerate(severity_order)],
+            default=len(severity_order),
+            output_field=IntegerField(),
+        )
+        results = results.order_by(severity_priority, '-created_at')
+        
         serializer = ScanResultSerializer(results, many=True)
         return Response(serializer.data)
 
@@ -170,13 +185,23 @@ class ScanResultViewSet(viewsets.ReadOnlyModelViewSet):
     filterset_fields = ['result_type', 'tool_name', 'severity', 'status']
     search_fields = ['tool_name', 'data']
     ordering_fields = ['created_at', 'severity']
-    ordering = ['-created_at']
+    ordering = ['severity', '-created_at']  # Order by severity first, then by creation time
 
     def get_queryset(self):
         user = self.request.user
-        if user.is_superuser:
-            return ScanResult.objects.all()
-        return ScanResult.objects.filter(scan_session__organization=user.organization)
+        queryset = ScanResult.objects.all()
+        if not user.is_superuser:
+            queryset = queryset.filter(scan_session__organization=user.organization)
+        
+        # Apply severity-based ordering
+        severity_order = ['critical', 'high', 'medium', 'low', 'info']
+        from django.db.models import Case, When, IntegerField
+        severity_priority = Case(
+            *[When(severity=sev, then=idx) for idx, sev in enumerate(severity_order)],
+            default=len(severity_order),
+            output_field=IntegerField(),
+        )
+        return queryset.order_by(severity_priority, '-created_at')
 
 
 class ScanArtifactViewSet(viewsets.ReadOnlyModelViewSet):
@@ -310,11 +335,21 @@ def scan_detail(request, scan_id):
     result_type = request.GET.get('type', 'all')
     severity = request.GET.get('severity', 'all')
     page = int(request.GET.get('page', 1))
-    active_tab = request.GET.get('tab', 'targets')
+    active_tab = request.GET.get('tab', 'inference')
     per_page = 50
     
-    # Get all results for this scan
-    all_results = scan.results.all().order_by('-created_at')
+    # Get all results for this scan, ordered by severity priority
+    all_results = scan.results.all()
+    
+    # Apply severity-based ordering
+    severity_order = ['critical', 'high', 'medium', 'low', 'info']
+    from django.db.models import Case, When, IntegerField
+    severity_priority = Case(
+        *[When(severity=sev, then=idx) for idx, sev in enumerate(severity_order)],
+        default=len(severity_order),
+        output_field=IntegerField(),
+    )
+    all_results = all_results.order_by(severity_priority, '-created_at')
     
     # Apply filters
     filtered_results = all_results
@@ -346,6 +381,9 @@ def scan_detail(request, scan_id):
     # Get vulnerabilities separately  
     vulnerabilities = all_results.filter(result_type='vulnerability')
     
+    # Get inference results separately
+    inference_results = all_results.filter(result_type='custom', tool_name='ai_inference_engine')
+    
     # Calculate vulnerability count for this scan
     vulnerability_count = vulnerabilities.count()
     
@@ -366,6 +404,7 @@ def scan_detail(request, scan_id):
         'targets': targets,
         'services': services,
         'vulnerabilities': vulnerabilities,
+        'inference_results': inference_results,
         'vulnerability_count': vulnerability_count,
         'user': request.user,
     }
@@ -456,3 +495,81 @@ def debug_scans_data(request):
     }
     
     return render(request, 'reports/debug_scans.html', context)
+
+
+@login_required(login_url='/accounts/login/')
+def download_attachment(request, scan_id, result_id, attachment_id):
+    """
+    Download an attachment file for a specific scan result.
+    Streams the file from S3 with the original filename.
+    """
+    # Get the scan session and verify user has access
+    scan = get_object_or_404(ScanSession, id=scan_id, organization=request.user.organization)
+    
+    # Get the result and verify it belongs to the scan
+    result = get_object_or_404(ScanResult, id=result_id, scan_session=scan)
+    
+    # Get the attachment and verify it belongs to the result
+    attachment = get_object_or_404(ScanResultAttachment, id=attachment_id, scan_result=result)
+    
+    # Check if the attachment has an S3 key
+    if not attachment.s3_key:
+        raise Http404("File not available for download")
+    
+    try:
+        # Get storage manager and stream file from S3
+        from .storage import ScanStorageManager
+        storage_manager = ScanStorageManager(scan)
+        
+        # Get file stream from S3
+        file_stream = storage_manager.get_attachment_stream(attachment.s3_key)
+        
+        # Create HTTP response with streaming
+        response = HttpResponse(
+            file_stream,
+            content_type=attachment.mime_type
+        )
+        
+        # Set the original filename for download
+        response['Content-Disposition'] = f'attachment; filename="{attachment.file_name}"'
+        response['Content-Length'] = attachment.file_size
+        
+        # Add cache headers
+        response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+        response['Pragma'] = 'no-cache'
+        response['Expires'] = '0'
+        
+        return response
+        
+    except Exception as e:
+        # If S3 retrieval fails, try fallback to archive extraction
+        try:
+            with tempfile.TemporaryDirectory() as temp_dir:
+                extract_path = os.path.join(temp_dir, 'extracted')
+                
+                with scan.archive_file.open('rb') as archive_file:
+                    with zipfile.ZipFile(archive_file, 'r') as zip_ref:
+                        zip_ref.extractall(extract_path)
+                
+                # Look for the file in the extracted archive
+                file_path = os.path.join(extract_path, attachment.original_path)
+                
+                if os.path.exists(file_path):
+                    with open(file_path, 'rb') as f:
+                        file_content = f.read()
+                    
+                    # Create HTTP response
+                    response = HttpResponse(file_content, content_type=attachment.mime_type)
+                    response['Content-Disposition'] = f'attachment; filename="{attachment.file_name}"'
+                    response['Content-Length'] = len(file_content)
+                    return response
+                else:
+                    raise Http404("File not found in archive")
+                    
+        except Exception as fallback_error:
+            # If both S3 and archive extraction fail, return a placeholder
+            placeholder_content = f"# {attachment.file_name}\n# File not available for download\n# Original path: {attachment.original_path}\n# Size: {attachment.display_size}\n# S3 Key: {attachment.s3_key}\n\n# This file was attached to scan result but is not available for download.\n# Error: {str(e)}"
+            
+            response = HttpResponse(placeholder_content, content_type='text/plain')
+            response['Content-Disposition'] = f'attachment; filename="{attachment.file_name}"'
+            return response
