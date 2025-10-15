@@ -1,5 +1,6 @@
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.forms import PasswordChangeForm
 from django.shortcuts import render, redirect, get_object_or_404
 from django.conf import settings
 from django.contrib import messages
@@ -418,3 +419,41 @@ class CustomSocialSignupView(SocialSignupView):
             else:
                 # Re-raise other exceptions
                 raise e
+
+
+@login_required
+def user_settings_page(request):
+    """
+    User settings page for profile management and password changes.
+    """
+    if request.method == 'POST':
+        form = PasswordChangeForm(request.user, request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Your password has been changed successfully.')
+            return redirect('accounts:user_settings')
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        form = PasswordChangeForm(request.user)
+    
+    # Add styling to form fields
+    for field in form.fields.values():
+        field.widget.attrs.update({
+            'class': 'form-input w-full max-w-2xl',
+            'placeholder': field.label
+        })
+    
+    context = {
+        'form': form,
+    }
+    return render(request, 'accounts/user_settings.html', context)
+
+
+@login_required
+def billing_page(request):
+    """
+    Billing page for subscription and payment management.
+    """
+    context = {}
+    return render(request, 'accounts/billing.html', context)

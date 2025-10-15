@@ -4,19 +4,19 @@
 {% block content %}
 <div class="min-h-screen gradient-bg" x-data="{ drawerOpen: false, drawerContent: '', modalOpen: false, modalContent: '', targetModalOpen: false }" x-init="{% has_targets as has_targets_value %}{% if not has_targets_value %}setTimeout(() => targetModalOpen = true, 100){% endif %}">
     <!-- Navigation -->
-    <nav class="glass-effect border-b border-white/10">
+    <nav class="glass-effect border-b border-white/10" style="z-index: 1; overflow: visible;">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
                 <div class="flex">
                     <div class="flex-shrink-0 flex items-center">
-                        <div class="flex items-center space-x-3">
+                        <a href="{% url 'reports:dashboard' %}" class="flex items-center space-x-3 hover:opacity-80 transition-opacity duration-200">
                             <div class="h-8 w-8 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center">
                                 <svg class="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
                                 </svg>
                             </div>
                             <h1 class="text-xl font-bold text-white">Penset</h1>
-                        </div>
+                        </a>
                     </div>
                     <div class="hidden sm:ml-8 sm:flex sm:space-x-8">
                         <a href="{% url 'reports:dashboard' %}" 
@@ -29,13 +29,6 @@
                            {% if request.resolver_match.url_name == 'scans' %}border-blue-400 text-blue-300{% else %}border-transparent text-slate-300 hover:border-slate-300 hover:text-white{% endif %}">
                             Scans
                         </a>
-                        {% if user.can_manage_organization %}
-                        <a href="{% url 'accounts:settings' %}" 
-                           class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors duration-200
-                           {% if request.resolver_match.url_name == 'settings' %}border-blue-400 text-blue-300{% else %}border-transparent text-slate-300 hover:border-slate-300 hover:text-white{% endif %}">
-                            Settings
-                        </a>
-                        {% endif %}
                     </div>
                 </div>
                 
@@ -56,9 +49,60 @@
                                 <p class="text-xs text-slate-400 capitalize">{{ user.role|default:"Admin" }}</p>
                             </div>
                         </div>
-                        <a href="{% url 'accounts:logout' %}" class="btn btn-secondary text-sm px-4 py-2 rounded-lg">
-                            Sign out
-                        </a>
+                        
+                            <!-- User dropdown menu -->
+                            <div class="relative" x-data="{ open: false }">
+                                <button @click="open = !open" class="flex items-center space-x-1 text-slate-300 hover:text-white transition-colors">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                    </svg>
+                                </button>
+                                
+                                <!-- Dropdown menu with speech bubble arrow -->
+                                <div x-show="open" 
+                                     @click.away="open = false"
+                                     x-transition:enter="transition ease-out duration-100"
+                                     x-transition:enter-start="transform opacity-0 scale-95"
+                                     x-transition:enter-end="transform opacity-100 scale-100"
+                                     x-transition:leave="transition ease-in duration-75"
+                                     x-transition:leave-start="transform opacity-100 scale-100"
+                                     x-transition:leave-end="transform opacity-0 scale-95"
+                                     class="absolute right-0 mt-4 w-56 bg-slate-900 rounded-lg shadow-2xl border border-slate-600 min-h-fit"
+                                     style="z-index: 999999 !important;">
+                                
+                                <!-- Speech bubble arrow pointing up -->
+                                <div class="absolute -top-2 right-4 w-4 h-4 bg-slate-900 border-l border-t border-slate-600 transform rotate-45"></div>
+                                
+                                <div class="py-3">
+                                    <a href="{% url 'accounts:settings' %}" class="flex items-center px-6 py-4 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors">
+                                        <svg class="w-5 h-5 mr-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                                        </svg>
+                                        Organization
+                                    </a>
+                                    <a href="{% url 'accounts:user_settings' %}" class="flex items-center px-6 py-4 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors">
+                                        <svg class="w-5 h-5 mr-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                        </svg>
+                                        Settings
+                                    </a>
+                                    <a href="{% url 'accounts:billing' %}" class="flex items-center px-6 py-4 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors">
+                                        <svg class="w-5 h-5 mr-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
+                                        </svg>
+                                        Billing
+                                    </a>
+                                    <div class="border-t border-slate-700 mx-4"></div>
+                                    <a href="{% url 'accounts:logout' %}" class="flex items-center px-6 py-4 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors">
+                                        <svg class="w-5 h-5 mr-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                                        </svg>
+                                        Sign Out
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
